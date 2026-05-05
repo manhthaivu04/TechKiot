@@ -64,4 +64,32 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::patch('packages/{id}/toggle',      [PackageController::class, 'toggle'])->name('packages.toggle');
         Route::put('packages/{id}/features',      [PackageController::class, 'syncFeatures'])->name('packages.features.sync');
     });
+
+    // ── Tenant (Restaurant) ─────────────────────────────────────────────────
+    // Examples on how to use `role` and `feature` middleware to restrict access
+    Route::middleware('role:OWNER,MANAGER')->prefix('tenant')->name('tenant.')->group(function () {
+
+        // Basic Features
+        Route::middleware('feature:MENU_MANAGEMENT')->group(function () {
+            // Route::apiResource('menu-items', MenuItemController::class);
+        });
+
+        Route::middleware('feature:POS_QUICK_ORDER')->group(function () {
+            // Route::post('orders/quick', [OrderController::class, 'quickOrder']);
+        });
+
+        // Pro Features
+        Route::middleware('feature:TABLE_MANAGEMENT')->group(function () {
+            // Route::apiResource('tables', TableController::class);
+        });
+
+        Route::middleware('feature:STAFF_MANAGEMENT')->group(function () {
+            // Route::apiResource('staff', StaffController::class);
+        });
+
+        // Premium Features
+        Route::middleware('feature:INVENTORY_MANAGEMENT')->group(function () {
+            // Route::apiResource('inventory', InventoryController::class);
+        });
+    });
 });

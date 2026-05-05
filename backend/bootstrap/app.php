@@ -23,6 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Register the role-check alias
         $middleware->alias([
             'role' => EnsureRole::class,
+            'feature' => \App\Http\Middleware\EnsureFeature::class,
         ]);
 
         // Ensure API responses are always JSON
