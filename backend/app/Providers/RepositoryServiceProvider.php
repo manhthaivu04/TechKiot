@@ -22,6 +22,14 @@ use App\Services\PackageService;
 use App\Services\RestaurantService;
 use App\Services\SubscriptionService;
 use App\Services\UserService;
+use App\Contracts\Repositories\ItemGroupRepositoryInterface;
+use App\Contracts\Repositories\ItemRepositoryInterface;
+use App\Contracts\Services\ItemGroupServiceInterface;
+use App\Contracts\Services\ItemServiceInterface;
+use App\Repositories\Eloquent\ItemGroupRepository;
+use App\Repositories\Eloquent\ItemRepository;
+use App\Services\ItemGroupService;
+use App\Services\ItemService;
 use Illuminate\Support\ServiceProvider;
 
 /**
@@ -42,6 +50,8 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(PackageRepositoryInterface::class,    PackageRepository::class);
         $this->app->bind(SubscriptionRepositoryInterface::class, SubscriptionRepository::class);
         $this->app->bind(UserRepositoryInterface::class,       UserRepository::class);
+        $this->app->bind(ItemGroupRepositoryInterface::class, ItemGroupRepository::class);
+        $this->app->bind(ItemRepositoryInterface::class, ItemRepository::class);
 
         // ── Services ───────────────────────────────────────────────────────────
         $this->app->bind(RestaurantServiceInterface::class, RestaurantService::class);
@@ -49,5 +59,7 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(PackageServiceInterface::class,    PackageService::class);
         $this->app->bind(SubscriptionServiceInterface::class, SubscriptionService::class);
         $this->app->bind(UserServiceInterface::class,       UserService::class);
+        $this->app->bind(ItemGroupServiceInterface::class, ItemGroupService::class);
+        $this->app->bind(ItemServiceInterface::class, ItemService::class);
     }
 }
