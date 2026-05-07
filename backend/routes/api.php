@@ -71,7 +71,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // Basic Features
         Route::middleware('feature:MENU_MANAGEMENT')->group(function () {
-            // Route::apiResource('menu-items', MenuItemController::class);
+            Route::apiResource('item-groups', \App\Http\Controllers\Api\Tenant\ItemGroupController::class);
+            Route::apiResource('items', \App\Http\Controllers\Api\Tenant\ItemController::class);
         });
 
         Route::middleware('feature:POS_QUICK_ORDER')->group(function () {
