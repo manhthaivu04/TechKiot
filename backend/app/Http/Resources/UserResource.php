@@ -10,6 +10,11 @@ class UserResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
+        $features = [];
+        if ($this->restaurant_id && $this->restaurant) {
+            $features = $this->restaurant->activeFeatureCodes();
+        }
+
         return [
             'id'            => $this->id,
             'name'          => $this->name,
@@ -18,6 +23,7 @@ class UserResource extends JsonResource
             'role_label'    => $this->role->label(),
             'is_active'     => $this->is_active,
             'restaurant_id' => $this->restaurant_id,
+            'features'      => $features,
             'last_login_at' => $this->last_login_at?->toIso8601String(),
             'created_at'    => $this->created_at?->toIso8601String(),
         ];
