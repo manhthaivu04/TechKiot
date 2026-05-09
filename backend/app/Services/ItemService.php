@@ -6,7 +6,6 @@ use App\Contracts\Repositories\ItemRepositoryInterface;
 use App\Contracts\Repositories\ItemGroupRepositoryInterface;
 use App\Contracts\Services\ItemServiceInterface;
 use Illuminate\Http\UploadedFile;
-use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Illuminate\Support\Facades\DB;
 use Exception;
 
@@ -38,9 +37,9 @@ class ItemService implements ItemServiceInterface
 
         // 2. Xử lý Upload ảnh lên Cloudinary
         if ($image) {
-            $uploadedFileUrl = Cloudinary::upload($image->getRealPath(), [
+            $uploadedFileUrl = cloudinary()->uploadApi()->upload($image->getRealPath(), [
                 'folder' => "kiottay/{$restaurantId}/items"
-            ])->getSecurePath();
+            ])['secure_url'];
             
             $data['image_url'] = $uploadedFileUrl;
         }
@@ -63,9 +62,9 @@ class ItemService implements ItemServiceInterface
             }
 
             // Upload ảnh mới
-            $uploadedFileUrl = Cloudinary::upload($image->getRealPath(), [
+            $uploadedFileUrl = cloudinary()->uploadApi()->upload($image->getRealPath(), [
                 'folder' => "kiottay/{$restaurantId}/items"
-            ])->getSecurePath();
+            ])['secure_url'];
             
             $data['image_url'] = $uploadedFileUrl;
         }
@@ -109,7 +108,7 @@ class ItemService implements ItemServiceInterface
                 $folderPath = substr($pathInfo['dirname'], $startPos);
                 $publicId = $folderPath . '/' . $pathInfo['filename'];
                 
-                Cloudinary::destroy($publicId);
+                cloudinary()->uploadApi()->destroy($publicId);
             }
         } catch (Exception $e) {
             // Log error nhưng không throw để tránh block việc xóa bản ghi DB

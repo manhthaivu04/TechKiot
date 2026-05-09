@@ -173,6 +173,106 @@
     - `feature_ids` (array)
     - `feature_ids.*` (uuid, exists: `features.id`)
 
+#### Tenant — Item Groups
+
+> **Auth/Role**: `auth:sanctum` + `role:OWNER,MANAGER` + `feature:MENU_MANAGEMENT`
+>
+> Prefix: `/api/tenant/item-groups`
+
+- **GET** `/api/tenant/item-groups`
+  - **Mô tả**: Lấy danh sách tất cả nhóm món của restaurant hiện tại.
+  - **Query**: none
+  - **Response**: `{ "data": [ ... ] }`
+
+- **POST** `/api/tenant/item-groups`
+  - **Mô tả**: Tạo nhóm món mới.
+  - **Body**:
+    - **required**: `name` (string, max 255)
+    - **optional**: `display_order` (integer, min 0)
+    - **optional**: `is_active` (boolean)
+  - **Response 201**: `{ "data": { ... }, "message": "Group created successfully" }`
+
+- **GET** `/api/tenant/item-groups/{id}`
+  - **Mô tả**: Lấy chi tiết một nhóm món theo ID.
+  - **Response**: `{ "data": { ... } }`
+
+- **PUT** `/api/tenant/item-groups/{id}`
+  - **Mô tả**: Cập nhật thông tin nhóm món.
+  - **Body (all optional / sometimes)**:
+    - `name` (string, max 255)
+    - `display_order` (integer, min 0, nullable)
+    - `is_active` (boolean)
+  - **Response**: `{ "data": { ... }, "message": "Group updated successfully" }`
+
+- **DELETE** `/api/tenant/item-groups/{id}`
+  - **Mô tả**: Xoá nhóm món.
+  - **Response 204**: `{ "message": "Group deleted successfully" }`
+
+---
+
+#### Tenant — Items
+
+> **Auth/Role**: `auth:sanctum` + `role:OWNER,MANAGER` + `feature:MENU_MANAGEMENT`
+>
+> Prefix: `/api/tenant/items`
+>
+> ⚠️ Các request có upload ảnh phải gửi dạng `multipart/form-data`.
+
+**Enum values:**
+
+| Field | Giá trị hợp lệ |
+|---|---|
+| `item_type` | `MENU_ITEM`, `INGREDIENT` |
+| `availability_status` | `IN_STOCK`, `OUT_OF_STOCK`, `SUSPENDED` |
+
+- **GET** `/api/tenant/items`
+  - **Mô tả**: Lấy danh sách món (có phân trang).
+  - **Query (optional)**:
+    - `item_group_id` (uuid) — lọc theo nhóm
+    - `item_type` (string) — `MENU_ITEM` | `INGREDIENT`
+    - `per_page` (integer, default 15)
+  - **Response**: Paginated JSON
+
+- **POST** `/api/tenant/items`
+  - **Mô tả**: Tạo món mới. Gửi dạng `multipart/form-data` nếu có ảnh.
+  - **Body**:
+    - **required**: `item_group_id` (uuid, phải thuộc restaurant hiện tại)
+    - **required**: `name` (string, max 255)
+    - **required**: `item_type` (`MENU_ITEM` | `INGREDIENT`)
+    - **required**: `unit` (string, max 50) — ví dụ: `"phần"`, `"ly"`, `"cái"`
+    - **required**: `sale_price` (numeric, min 0)
+    - **required**: `availability_status` (`IN_STOCK` | `OUT_OF_STOCK` | `SUSPENDED`)
+    - **optional**: `image` (file: jpeg/png/jpg/webp, max 2 MB)
+    - **optional**: `description` (string)
+    - **optional**: `cost_price` (numeric, min 0)
+    - **optional**: `is_active` (boolean)
+  - **Response 201**: `{ "data": { ... }, "message": "Item created successfully" }`
+
+- **GET** `/api/tenant/items/{id}`
+  - **Mô tả**: Lấy chi tiết một món (kèm quan hệ `itemGroup`).
+  - **Response**: `{ "data": { ..., "item_group": { ... } } }`
+
+- **PUT** `/api/tenant/items/{id}`
+  - **Mô tả**: Cập nhật món. Gửi dạng `multipart/form-data` nếu thay ảnh.
+  - **Body (all optional / sometimes)**:
+    - `item_group_id` (uuid, phải thuộc restaurant hiện tại)
+    - `name` (string, max 255)
+    - `item_type` (`MENU_ITEM` | `INGREDIENT`)
+    - `unit` (string, max 50)
+    - `sale_price` (numeric, min 0)
+    - `availability_status` (`IN_STOCK` | `OUT_OF_STOCK` | `SUSPENDED`)
+    - `image` (file: jpeg/png/jpg/webp, max 2 MB, nullable)
+    - `description` (string, nullable)
+    - `cost_price` (numeric, min 0, nullable)
+    - `is_active` (boolean)
+  - **Response**: `{ "data": { ... }, "message": "Item updated successfully" }`
+
+- **DELETE** `/api/tenant/items/{id}`
+  - **Mô tả**: Xoá món.
+  - **Response 204**: `{ "message": "Item deleted successfully" }`
+
+---
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
