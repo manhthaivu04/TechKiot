@@ -26,10 +26,12 @@ use App\Contracts\Repositories\ItemGroupRepositoryInterface;
 use App\Contracts\Repositories\ItemRepositoryInterface;
 use App\Contracts\Services\ItemGroupServiceInterface;
 use App\Contracts\Services\ItemServiceInterface;
+use App\Contracts\Services\OrderServiceInterface;
 use App\Repositories\Eloquent\ItemGroupRepository;
 use App\Repositories\Eloquent\ItemRepository;
 use App\Services\ItemGroupService;
 use App\Services\ItemService;
+use App\Services\OrderService;
 use Illuminate\Support\ServiceProvider;
 
 /**
@@ -61,5 +63,6 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(UserServiceInterface::class,       UserService::class);
         $this->app->bind(ItemGroupServiceInterface::class, ItemGroupService::class);
         $this->app->bind(ItemServiceInterface::class, ItemService::class);
+        $this->app->bind(OrderServiceInterface::class, OrderService::class);
     }
 }
