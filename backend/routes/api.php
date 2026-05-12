@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\PackageController;
 use App\Http\Controllers\Admin\RestaurantController;
 use App\Http\Controllers\Admin\SubscriptionController;
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\Api\Tenant\StaffController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -66,11 +67,11 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     // ── Tenant (Restaurant) ─────────────────────────────────────────────────
-    // Examples on how to use `role` and `feature` middleware to restrict access
-    Route::middleware('role:OWNER,MANAGER')->prefix('tenant')->name('tenant.')->group(function () {
+    // Tenant users (scoped by restaurant_id). Module-level routes apply their own role/feature guards.
+    Route::middleware('role:OWNER,MANAGER,WAITER,KITCHEN,CASHIER')->prefix('tenant')->name('tenant.')->group(function () {
 
         // Basic Features
-        Route::middleware('feature:MENU_MANAGEMENT')->group(function () {
+        Route::middleware(['feature:MENU_MANAGEMENT', 'role:OWNER,MANAGER'])->group(function () {
             Route::apiResource('item-groups', \App\Http\Controllers\Api\Tenant\ItemGroupController::class);
             Route::apiResource('items', \App\Http\Controllers\Api\Tenant\ItemController::class);
         });
@@ -95,8 +96,8 @@ Route::middleware('auth:sanctum')->group(function () {
             // Route::apiResource('tables', TableController::class);
         });
 
-        Route::middleware('feature:STAFF_MANAGEMENT')->group(function () {
-            // Route::apiResource('staff', StaffController::class);
+        Route::middleware(['feature:STAFF_MANAGEMENT', 'role:OWNER,MANAGER'])->group(function () {
+            Route::apiResource('staff', StaffController::class);
         });
 
         // Premium Features
