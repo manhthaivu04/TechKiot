@@ -34,6 +34,12 @@ use App\Repositories\Eloquent\ItemRepository;
 use App\Services\ItemGroupService;
 use App\Services\ItemService;
 use App\Services\OrderService;
+// ── Menu Module ────────────────────────────────────────────────────────────
+use App\Contracts\Menu\MenuSourceStrategy;
+use App\Services\Menu\MenuGrouper;
+use App\Services\Menu\MenuService;
+use App\Services\Menu\MenuStrategyResolver;
+use App\Services\Menu\Strategies\QrStaticMenuStrategy;
 use Illuminate\Support\ServiceProvider;
 
 /**
@@ -67,5 +73,15 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(ItemGroupServiceInterface::class, ItemGroupService::class);
         $this->app->bind(ItemServiceInterface::class, ItemService::class);
         $this->app->bind(OrderServiceInterface::class, OrderService::class);
+
+        // ── Menu Module ────────────────────────────────────────────────────
+        // MenuService và Resolver được đăng ký là singleton vì không có state
+        // (giống OrderService — stateless, safe to share across requests).
+        $this->app->singleton(MenuStrategyResolver::class);
+        $this->app->singleton(MenuGrouper::class);
+        $this->app->singleton(MenuService::class);
+
+        // Các Strategy được tạo mới mỗi lần (app() trong Resolver lo việc này)
+        $this->app->bind(QrStaticMenuStrategy::class);
     }
 }

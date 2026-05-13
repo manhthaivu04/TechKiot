@@ -24,6 +24,18 @@ Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login'])->name('auth.login');
 });
 
+// ── Public: QR Menu (không cần đăng nhập — khách hàng quét QR) ─────────────
+// Tương tự pattern Order: khách gọi endpoint này trước khi đặt món.
+// public_token + type được nhúng vào QR Code bởi hệ thống khi tạo QR.
+//
+// Ví dụ QR tĩnh (Basic): GET /api/public/menu?public_token={restaurant_id}&type=qr_static
+// Ví dụ QR bàn  (Pro):   GET /api/public/menu?public_token={table_id}&type=qr_table
+Route::prefix('public')->name('public.')->group(function () {
+    Route::get('menu', [\App\Http\Controllers\Api\Public\QrMenuController::class, 'index'])
+         ->name('menu.index');
+});
+
+
 // ── Authenticated ───────────────────────────────────────────────────────────
 Route::middleware('auth:sanctum')->group(function () {
 

@@ -41,6 +41,55 @@
   - **Auth**: required
   - **Query/Body**: none
 
+#### Public — QR Menu
+
+> **Auth/Role**: Public (Không cần đăng nhập)
+>
+> Prefix: `/api/public/menu`
+
+- **GET** `/api/public/menu`
+  - **Mô tả**: Lấy danh sách thực đơn của nhà hàng cho khách quét mã QR, tự động gom nhóm theo danh mục.
+  - **Query (required)**:
+    - `public_token` (string, uuid) — UUID của nhà hàng (nếu quét mã QR tĩnh) hoặc UUID của bàn (nếu quét mã QR tại bàn).
+    - `type` (string) — Loại mã QR: `qr_static` (QR tĩnh, mặc định hỗ trợ).
+  - **Ví dụ Request**:
+    ```
+    GET /api/public/menu?public_token=123e4567-e89b-12d3-a456-426614174000&type=qr_static
+    ```
+  - **Response 200**:
+    ```json
+    {
+      "success": true,
+      "data": [
+        {
+          "group_id": "018e1234-...",
+          "group_name": "Món chính",
+          "display_order": 1,
+          "items": [
+            {
+              "id": "018e5678-...",
+              "name": "Phở bò",
+              "item_type": "MENU_ITEM",
+              "unit": "tô",
+              "image_url": "https://res.cloudinary.com/.../pho-bo.jpg",
+              "description": "Phở bò truyền thống",
+              "sale_price": "55000.00",
+              "availability_status": "IN_STOCK"
+            }
+          ]
+        },
+        {
+          "group_id": null,
+          "group_name": "Khác",
+          "display_order": 2147483647,
+          "items": [ ... ]
+        }
+      ]
+    }
+    ```
+  - **Response 404**: Trả về khi `public_token` (nhà hàng) không tồn tại.
+  - **Response 422**: Trả về khi thiếu query param hoặc `type` không hợp lệ.
+
 #### Admin — Restaurants
 
 - **GET** `/api/admin/restaurants`
