@@ -31,8 +31,15 @@ Route::prefix('auth')->group(function () {
 // Ví dụ QR tĩnh (Basic): GET /api/public/menu?public_token={restaurant_id}&type=qr_static
 // Ví dụ QR bàn  (Pro):   GET /api/public/menu?public_token={table_id}&type=qr_table
 Route::prefix('public')->name('public.')->group(function () {
+    // GET /api/public/menu — Khách quét QR lấy thực đơn (không cần đăng nhập)
     Route::get('menu', [\App\Http\Controllers\Api\Public\QrMenuController::class, 'index'])
          ->name('menu.index');
+
+    // POST /api/public/orders — Khách tự đặt món qua QR (không cần đăng nhập)
+    // source_channel chỉ chấp nhận: qr_static | qr_table (FormRequest chặn cashier)
+    // public_token nhúng trong QR Code dùng để xác định nhà hàng / bàn
+    Route::post('orders', [\App\Http\Controllers\Api\Public\PublicOrderController::class, 'store'])
+         ->name('orders.store');
 });
 
 

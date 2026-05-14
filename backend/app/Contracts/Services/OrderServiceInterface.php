@@ -15,6 +15,12 @@ interface OrderServiceInterface
 {
     public function placeOrder(PlaceOrderDTO $dto): Order;
 
+    /**
+     * @param Order $order
+     * @param \App\DTOs\PlaceOrderItemDTO[] $newItems
+     */
+    public function addItems(Order $order, array $newItems): Order;
+
     public function recordPayment(
         Order   $order,
         float   $amount,

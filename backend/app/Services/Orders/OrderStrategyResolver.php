@@ -27,11 +27,11 @@ class OrderStrategyResolver
     public function resolve(OrderSourceChannel $channel): OrderSourceStrategy
     {
         return match ($channel) {
-            OrderSourceChannel::Cashier  => app(CashierOrderStrategy::class),
+            OrderSourceChannel::Cashier => app(CashierOrderStrategy::class),
             OrderSourceChannel::QrStatic => app(QrStaticOrderStrategy::class),
 
-            // Pro: uncomment khi implement Pro module
-            OrderSourceChannel::QrTable  => app(QrTableOrderStrategy::class),
+                // Pro: uncomment khi implement Pro module
+            OrderSourceChannel::QrTable => app(QrTableOrderStrategy::class),
         };
     }
 }

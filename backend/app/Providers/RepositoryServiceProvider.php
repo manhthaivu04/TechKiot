@@ -34,6 +34,10 @@ use App\Repositories\Eloquent\ItemRepository;
 use App\Services\ItemGroupService;
 use App\Services\ItemService;
 use App\Services\OrderService;
+use App\Services\Orders\Actions\AddItemsToOrderAction;
+use App\Services\Orders\Actions\PlaceOrderAction;
+use App\Services\Orders\Actions\RecordPaymentAction;
+use App\Services\Orders\Actions\TransitionOrderAction;
 // ── Menu Module ────────────────────────────────────────────────────────────
 use App\Contracts\Menu\MenuSourceStrategy;
 use App\Services\Menu\MenuGrouper;
@@ -73,6 +77,14 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(ItemGroupServiceInterface::class, ItemGroupService::class);
         $this->app->bind(ItemServiceInterface::class, ItemService::class);
         $this->app->bind(OrderServiceInterface::class, OrderService::class);
+
+        // ── Order Action Classes ────────────────────────────────────────────
+        // Stateless — an toàn dùng singleton để tái sử dụng qua nhiều requests.
+        // Controller có thể inject thẳng Action thay vì qua OrderService nếu muốn.
+        $this->app->singleton(PlaceOrderAction::class);
+        $this->app->singleton(AddItemsToOrderAction::class);
+        $this->app->singleton(RecordPaymentAction::class);
+        $this->app->singleton(TransitionOrderAction::class);
 
         // ── Menu Module ────────────────────────────────────────────────────
         // MenuService và Resolver được đăng ký là singleton vì không có state
