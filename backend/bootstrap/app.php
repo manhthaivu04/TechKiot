@@ -12,6 +12,7 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 return Application::configure(basePath: dirname(__DIR__))
     ->withProviders([
         RepositoryServiceProvider::class,
+        \App\Providers\EventServiceProvider::class,
     ])
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
@@ -33,16 +34,29 @@ return Application::configure(basePath: dirname(__DIR__))
         // Unified JSON error responses
         $exceptions->render(function (NotFoundHttpException $e, Request $request) {
             if ($request->expectsJson()) {
-                return response()->json(['message' => 'Resource not found.'], 404);
+                return response()->json([
+                    'code'    => \App\Enums\ApiCode::NOT_FOUND->value,
+                    'message' => 'Tài nguyên không tồn tại.',
+                ], 404);
             }
         });
 
         $exceptions->render(function (ValidationException $e, Request $request) {
             if ($request->expectsJson()) {
                 return response()->json([
-                    'message' => 'Validation failed.',
+                    'code'    => \App\Enums\ApiCode::VALIDATION_ERROR->value,
+                    'message' => 'Dữ liệu không hợp lệ.',
                     'errors'  => $e->errors(),
                 ], 422);
+            }
+        });
+
+        $exceptions->render(function (\DomainException $e, Request $request) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'code'    => \App\Enums\ApiCode::DOMAIN_ERROR->value,
+                    'message' => $e->getMessage(),
+                ], 400);
             }
         });
     })->create();

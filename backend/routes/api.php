@@ -31,15 +31,12 @@ Route::prefix('auth')->group(function () {
 // Ví dụ QR tĩnh (Basic): GET /api/public/menu?public_token={restaurant_id}&type=qr_static
 // Ví dụ QR bàn  (Pro):   GET /api/public/menu?public_token={table_id}&type=qr_table
 Route::prefix('public')->name('public.')->group(function () {
-    // GET /api/public/menu — Khách quét QR lấy thực đơn (không cần đăng nhập)
     Route::get('menu', [\App\Http\Controllers\Api\Public\QrMenuController::class, 'index'])
-         ->name('menu.index');
-
-    // POST /api/public/orders — Khách tự đặt món qua QR (không cần đăng nhập)
-    // source_channel chỉ chấp nhận: qr_static | qr_table (FormRequest chặn cashier)
-    // public_token nhúng trong QR Code dùng để xác định nhà hàng / bàn
+        ->name('menu.index');
     Route::post('orders', [\App\Http\Controllers\Api\Public\PublicOrderController::class, 'store'])
-         ->name('orders.store');
+        ->name('orders.store');
+    Route::get('orders/{id}', [\App\Http\Controllers\Api\Public\PublicOrderController::class, 'show'])
+        ->name('orders.show');
 });
 
 
@@ -59,7 +56,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('restaurants/onboard', [RestaurantController::class, 'onboard'])->name('restaurants.onboard');
         Route::apiResource('restaurants', RestaurantController::class)
             ->except(['destroy']);
-        Route::patch('restaurants/{id}/lock',   [RestaurantController::class, 'lock'])->name('restaurants.lock');
+        Route::patch('restaurants/{id}/lock', [RestaurantController::class, 'lock'])->name('restaurants.lock');
         Route::patch('restaurants/{id}/unlock', [RestaurantController::class, 'unlock'])->name('restaurants.unlock');
 
         // Owner users (restaurant owners)
@@ -67,9 +64,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // Subscriptions (nested under restaurants)
         Route::prefix('restaurants/{restaurantId}/subscriptions')->name('restaurants.subscriptions.')->group(function () {
-            Route::get('/',          [SubscriptionController::class, 'index'])->name('index');
-            Route::get('/active',    [SubscriptionController::class, 'active'])->name('active');
-            Route::post('/',         [SubscriptionController::class, 'assign'])->name('assign');
+            Route::get('/', [SubscriptionController::class, 'index'])->name('index');
+            Route::get('/active', [SubscriptionController::class, 'active'])->name('active');
+            Route::post('/', [SubscriptionController::class, 'assign'])->name('assign');
         });
         Route::patch('subscriptions/{id}/cancel', [SubscriptionController::class, 'cancel'])->name('subscriptions.cancel');
 
@@ -81,8 +78,8 @@ Route::middleware('auth:sanctum')->group(function () {
         // Packages (Service packages)
         Route::apiResource('packages', PackageController::class)
             ->except(['destroy']);
-        Route::patch('packages/{id}/toggle',      [PackageController::class, 'toggle'])->name('packages.toggle');
-        Route::put('packages/{id}/features',      [PackageController::class, 'syncFeatures'])->name('packages.features.sync');
+        Route::patch('packages/{id}/toggle', [PackageController::class, 'toggle'])->name('packages.toggle');
+        Route::put('packages/{id}/features', [PackageController::class, 'syncFeatures'])->name('packages.features.sync');
     });
 
     // ── Tenant (Restaurant) ─────────────────────────────────────────────────
@@ -99,15 +96,12 @@ Route::middleware('auth:sanctum')->group(function () {
         // Lý do không dùng apiResource: storePayment và updateStatus là custom routes.
         // POS_QUICK_ORDER là feature tối thiểu để vào module orders.
         Route::middleware('feature:POS_QUICK_ORDER')->group(function () {
-            Route::get('orders',                     [\App\Http\Controllers\Api\Tenant\OrderController::class, 'index'])->name('orders.index');
-            Route::post('orders',                    [\App\Http\Controllers\Api\Tenant\OrderController::class, 'store'])->name('orders.store');
-            Route::get('orders/{id}',                [\App\Http\Controllers\Api\Tenant\OrderController::class, 'show'])->name('orders.show');
-            Route::patch('orders/{id}/status',       [\App\Http\Controllers\Api\Tenant\OrderController::class, 'updateStatus'])->name('orders.status');
-            Route::post('orders/{id}/payments',      [\App\Http\Controllers\Api\Tenant\OrderController::class, 'storePayment'])->name('orders.payments.store');
-        });
-
-        Route::middleware('feature:POS_QUICK_ORDER')->group(function () {
-            // Route::post('orders/quick', [OrderController::class, 'quickOrder']);
+            Route::get('orders', [\App\Http\Controllers\Api\Tenant\OrderController::class, 'index'])->name('orders.index');
+            Route::post('orders', [\App\Http\Controllers\Api\Tenant\OrderController::class, 'store'])->name('orders.store');
+            Route::get('orders/{id}', [\App\Http\Controllers\Api\Tenant\OrderController::class, 'show'])->name('orders.show');
+            Route::patch('orders/{id}/status', [\App\Http\Controllers\Api\Tenant\OrderController::class, 'updateStatus'])->name('orders.status');
+            Route::post('orders/{id}/items', [\App\Http\Controllers\Api\Tenant\OrderController::class, 'addItems'])->name('orders.items.store');
+            Route::post('orders/{id}/payments', [\App\Http\Controllers\Api\Tenant\OrderController::class, 'storePayment'])->name('orders.payments.store');
         });
 
         // Pro Features
@@ -121,7 +115,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // Premium Features
         Route::middleware('feature:INVENTORY_MANAGEMENT')->group(function () {
-            // Route::apiResource('inventory', InventoryController::class);
         });
     });
 });

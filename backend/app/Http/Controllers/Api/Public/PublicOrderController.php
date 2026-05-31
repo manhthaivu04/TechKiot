@@ -90,10 +90,26 @@ class PublicOrderController extends Controller
         // ── Gọi Service — TÁI SỬ DỤNG HOÀN TOÀN, không viết lại logic tính tiền
         $order = $this->orderService->placeOrder($dto);
 
-        return response()->json([
-            'message' => 'Đặt món thành công! Đơn hàng của bạn đang được chuẩn bị.',
-            'data'    => new OrderResource($order),
-        ], 201);
+        return $this->successResponse(
+            data:    new OrderResource($order),
+            message: 'Đặt món thành công! Đơn hàng của bạn đang được chuẩn bị.',
+            code:    \App\Enums\ApiCode::CREATED,
+            httpStatus: 201
+        );
+    }
+
+    /**
+     * GET /api/public/orders/{id}
+     * Cho phép khách xem lại trạng thái đơn hàng của mình (thông qua UUID).
+     */
+    public function show(string $id): JsonResponse
+    {
+        // Vì UUID rất khó đoán nên có thể dùng trực tiếp để tra cứu đơn hàng công khai.
+        $order = \App\Models\Order::query()
+            ->with(['items.item', 'payments'])
+            ->findOrFail($id);
+
+        return $this->successResponse(new OrderResource($order));
     }
 
     // ─── Private Helpers ──────────────────────────────────────────────────────

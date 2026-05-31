@@ -3,34 +3,42 @@
 namespace App\Services\Orders\Actions;
 
 use App\Enums\OrderStatus;
+use App\Events\OrderStatusTransitioned;
 use App\Models\Order;
 
 /**
  * TransitionOrderAction — Chuyển trạng thái đơn hàng.
  *
- * ── Single Responsibility ────────────────────────────────────────────────────
- * Class này chỉ làm DUY NHẤT một việc: validate và thực hiện chuyển
- * trạng thái đơn hàng. Business rule của transition được đặt tập trung
- * tại Order::transitionTo() để đảm bảo tính nhất quán dù gọi từ đâu.
+ * ── Sau khi tích hợp Observer Pattern ────────────────────────────────────────
+ * Bếp nhấn nút "Đã nấu xong" → OrderController gọi Action này.
+ * Action delegate xuống State Pattern để validate transition, sau đó
+ * fire Event → Listener xử lý các side-effects (báo KDS, update bàn...).
  *
- * Ví dụ sử dụng:
- * - Nhân viên bếp đánh dấu đơn "Đang nấu" (Processing).
- * - Thu ngân xác nhận đơn đã phục vụ xong (Served).
- * - Manager hủy đơn (Cancelled).
+ * Luồng:
+ *   TransitionOrderAction → order->transitionTo() [State validates]
+ *                         → fire(OrderStatusTransitioned)
+ *                         → NotifyKitchenStatusListener [báo màn bếp]
+ *                         → (PRO) NotifyTableStatusListener [cập nhật bàn]
  */
 class TransitionOrderAction
 {
     /**
-     * Thực thi chuyển trạng thái đơn hàng.
-     *
-     * @throws \DomainException Nếu transition không hợp lệ theo business rules
+     * @throws \DomainException Nếu transition không hợp lệ theo State Pattern
      */
     public function execute(Order $order, OrderStatus $newStatus): Order
     {
-        // Delegate xuống Model — business rule transition nằm tập trung tại đây,
-        // không rải ở Service hay Controller.
+        $fromStatus = $order->status;
+
+        // State Pattern: kiểm tra và thực thi chuyển trạng thái
         $order->transitionTo($newStatus);
 
-        return $order->refresh();
+        // Observer Pattern: fire event để Listener xử lý side-effects
+        OrderStatusTransitioned::dispatch(
+            order: $order->refresh(),
+            from:  $fromStatus,
+            to:    $newStatus,
+        );
+
+        return $order;
     }
 }

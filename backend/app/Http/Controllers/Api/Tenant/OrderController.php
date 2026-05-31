@@ -49,10 +49,12 @@ class OrderController extends Controller
 
         $order = $this->orderService->placeOrder($dto);
 
-        return response()->json([
-            'message' => 'Đặt đơn hàng thành công.',
-            'data'    => new OrderResource($order),
-        ], 201);
+        return $this->successResponse(
+            data:    new OrderResource($order),
+            message: 'Đặt đơn hàng thành công.',
+            code:    \App\Enums\ApiCode::CREATED,
+            httpStatus: 201
+        );
     }
 
     /**
@@ -69,9 +71,9 @@ class OrderController extends Controller
             ->latest()
             ->paginate(20);
 
-        return response()->json([
-            'data' => OrderResource::collection($orders->items()),
-            'meta' => [
+        return $this->successResponse([
+            'items' => OrderResource::collection($orders->items()),
+            'meta'  => [
                 'current_page' => $orders->currentPage(),
                 'last_page'    => $orders->lastPage(),
                 'total'        => $orders->total(),
@@ -92,7 +94,7 @@ class OrderController extends Controller
             ->with(['items.item', 'payments'])
             ->findOrFail($id);
 
-        return response()->json(['data' => new OrderResource($order)]);
+        return $this->successResponse(new OrderResource($order));
     }
 
     /**
@@ -108,13 +110,18 @@ class OrderController extends Controller
             ->where('restaurant_id', $user->restaurant_id)
             ->findOrFail($id);
 
-        $newStatus = OrderStatus::from(request()->input('status'));
+        $validated = request()->validate([
+            'status' => ['required', \Illuminate\Validation\Rule::enum(OrderStatus::class)],
+        ]);
+
+        $newStatus = OrderStatus::from($validated['status']);
         $order     = $this->orderService->transition($order, $newStatus);
 
-        return response()->json([
-            'message' => "Đơn hàng đã chuyển sang trạng thái [{$newStatus->label()}].",
-            'data'    => new OrderResource($order),
-        ]);
+        return $this->successResponse(
+            data:    new OrderResource($order),
+            message: "Đơn hàng đã chuyển sang trạng thái [{$order->state()->label()}].",
+            code:    \App\Enums\ApiCode::SUCCESS
+        );
     }
 
     /**
@@ -139,9 +146,42 @@ class OrderController extends Controller
             referenceNo: $validated['reference_no'] ?? null,
         );
 
-        return response()->json([
-            'message' => 'Ghi nhận thanh toán thành công.',
-            'data'    => new PaymentResource($payment),
-        ], 201);
+        return $this->successResponse(
+            data:    new PaymentResource($payment),
+            message: 'Ghi nhận thanh toán thành công.',
+            code:    \App\Enums\ApiCode::CREATED,
+            httpStatus: 201
+        );
+    }
+
+    /**
+     * POST /api/tenant/orders/{id}/items
+     * Gọi thêm món vào đơn hàng hiện tại
+     */
+    public function addItems(\App\Http\Requests\Order\AddOrderItemsRequest $request, string $id): JsonResponse
+    {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+
+        $order = Order::query()
+            ->where('restaurant_id', $user->restaurant_id)
+            ->findOrFail($id);
+
+        $validated = $request->validated();
+        
+        // Chuyển array thành DTO hoặc mảng DTO
+        $newItems = array_map(fn($item) => new \App\DTOs\PlaceOrderItemDTO(
+            itemId: $item['item_id'],
+            quantity: $item['quantity'],
+            note: $item['note'] ?? null,
+        ), $validated['items']);
+
+        $order = $this->orderService->addItems($order, $newItems);
+
+        return $this->successResponse(
+            data:    new OrderResource($order),
+            message: 'Đã thêm món vào đơn hàng thành công.',
+            code:    \App\Enums\ApiCode::SUCCESS
+        );
     }
 }

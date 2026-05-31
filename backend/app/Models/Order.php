@@ -93,6 +93,20 @@ class Order extends Model
     // ─── Domain Helpers ───────────────────────────────────────────────────────
 
     /**
+     * Lấy đối tượng State hiện tại theo State Pattern
+     */
+    public function state(): \App\States\Order\OrderState
+    {
+        return match ($this->status) {
+            OrderStatus::Open      => new \App\States\Order\OpenState($this),
+            OrderStatus::Cooking   => new \App\States\Order\CookingState($this),
+            OrderStatus::Served    => new \App\States\Order\ServedState($this),
+            OrderStatus::Paid      => new \App\States\Order\PaidState($this),
+            OrderStatus::Cancelled => new \App\States\Order\CancelledState($this),
+        };
+    }
+
+    /**
      * Chuyển trạng thái đơn hàng an toàn.
      * Tập trung kiểm tra business rule tại Model thay vì rải ở Controllers,
      * đảm bảo không bao giờ có transition không hợp lệ dù gọi từ đâu.
@@ -101,15 +115,8 @@ class Order extends Model
      */
     public function transitionTo(OrderStatus $newStatus): void
     {
-        if (! $this->status->canTransitionTo($newStatus)) {
-            throw new \DomainException(
-                "Không thể chuyển đơn hàng từ [{$this->status->label()}] sang [{$newStatus->label()}]."
-            );
-        }
-
-        $this->update(['status' => $newStatus]);
-
-        Log::info("Order [{$this->order_code}] transitioned: {$this->status->value} → {$newStatus->value}");
+        // Delegate hành vi chuyển trạng thái cho object State hiện tại.
+        $this->state()->transitionTo($newStatus);
     }
 
     /**

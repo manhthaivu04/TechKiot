@@ -320,55 +320,111 @@
   - **Mô tả**: Xoá món.
   - **Response 204**: `{ "message": "Item deleted successfully" }`
 
+#### Public — QR Order
+
+> **Auth/Role**: Public (Không cần đăng nhập)
+>
+> Prefix: `/api/public/orders`
+
+- **POST** `/api/public/orders`
+  - **Mô tả**: Khách hàng quét mã QR để đặt món.
+  - **Body**:
+    - **required**: `public_token` (string, uuid)
+    - **required**: `source_channel` (`qr_static` | `qr_table`)
+    - **required**: `items` (array)
+    - `items.*.item_id` (uuid)
+    - `items.*.quantity` (integer)
+    - `items.*.note` (string, optional)
+    - **optional**: `customer_name` (string)
+    - **optional**: `customer_phone` (string)
+    - **optional**: `note` (string)
+  - **Response 201**: `{ "code": "CREATED", "message": "Đặt món thành công! Đơn hàng của bạn đang được chuẩn bị.", "data": { ... } }`
+
+- **GET** `/api/public/orders/{id}`
+  - **Mô tả**: Khách hàng xem lại trạng thái đơn hàng và các món đã đặt thông qua ID đơn hàng (UUID).
+  - **Response**: `{ "code": "SUCCESS", "message": "Thao tác thành công.", "data": { ... } }`
+
 ---
 
-## About Laravel
+#### Tenant — Orders
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+> **Auth/Role**: `auth:sanctum` + `role:OWNER,MANAGER,WAITER,KITCHEN,CASHIER` + `feature:POS_QUICK_ORDER`
+>
+> Prefix: `/api/tenant/orders`
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- **GET** `/api/tenant/orders`
+  - **Mô tả**: Lấy danh sách đơn hàng.
+  - **Query (optional)**: Phân trang `per_page`
+  - **Response**: Paginated JSON
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- **POST** `/api/tenant/orders`
+  - **Mô tả**: Nhân viên tạo đơn hàng mới.
+  - **Body**:
+    - **required**: `source_channel` (`cashier` | `pos`)
+    - **required**: `items` (array)
+    - **optional**: `table_id`, `customer_name`, `customer_phone`, `note`, `guest_count`, `discount_amount`
+  - **Response 201**: `{ "code": "CREATED", "message": "Đặt đơn hàng thành công.", "data": { ... } }`
 
-## Learning Laravel
+- **GET** `/api/tenant/orders/{id}`
+  - **Mô tả**: Lấy chi tiết đơn hàng (bao gồm items, payments).
+  - **Response**: `{ "code": "SUCCESS", "message": "Thao tác thành công.", "data": { ... } }`
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+- **PATCH** `/api/tenant/orders/{id}/status`
+  - **Mô tả**: Cập nhật trạng thái đơn hàng (áp dụng State Pattern).
+  - **Body**:
+    - **required**: `status` (`cooking`, `served`, `paid`, `cancelled`)
+  - **Response**: `{ "code": "SUCCESS", "message": "Đơn hàng đã chuyển sang trạng thái...", "data": { ... } }`
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+- **POST** `/api/tenant/orders/{id}/items`
+  - **Mô tả**: Thêm món vào đơn hàng hiện tại (chỉ được khi trạng thái chưa đóng).
+  - **Body**:
+    - **required**: `items` (array)
+    - `items.*.item_id` (uuid)
+    - `items.*.quantity` (integer)
+    - `items.*.note` (string, optional)
+  - **Response**: `{ "code": "SUCCESS", "message": "Đã thêm món vào đơn hàng thành công.", "data": { ... } }`
 
-## Laravel Sponsors
+- **POST** `/api/tenant/orders/{id}/payments`
+  - **Mô tả**: Ghi nhận thanh toán cho đơn hàng.
+  - **Body**:
+    - **required**: `amount` (numeric)
+    - **required**: `payment_method` (`cash`, `transfer`, `card`)
+    - **optional**: `reference_no` (string)
+  - **Response 201**: `{ "code": "CREATED", "message": "Ghi nhận thanh toán thành công.", "data": { ... } }`
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+---
 
-### Premium Partners
+#### Tenant — Staff
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+> **Auth/Role**: `auth:sanctum` + `role:OWNER,MANAGER` + `feature:STAFF_MANAGEMENT`
+>
+> Prefix: `/api/tenant/staff`
 
-## Contributing
+- **GET** `/api/tenant/staff`
+  - **Mô tả**: Lấy danh sách nhân viên của nhà hàng.
+  - **Query (optional)**: Phân trang `per_page`, lọc theo `role`
+  - **Response**: Paginated JSON
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+- **POST** `/api/tenant/staff`
+  - **Mô tả**: Tạo tài khoản nhân viên mới.
+  - **Body**:
+    - **required**: `name` (string)
+    - **required**: `email` (string, unique)
+    - **required**: `password` (string)
+    - **required**: `role` (`MANAGER`, `WAITER`, `KITCHEN`, `CASHIER`)
+  - **Response 201**: `{ "code": "CREATED", "message": "Tạo nhân viên thành công.", "data": { ... } }`
 
-## Code of Conduct
+- **GET** `/api/tenant/staff/{id}`
+  - **Mô tả**: Lấy chi tiết thông tin nhân viên.
+  - **Response**: `{ "code": "SUCCESS", "message": "Thao tác thành công.", "data": { ... } }`
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+- **PUT** `/api/tenant/staff/{id}`
+  - **Mô tả**: Cập nhật thông tin nhân viên.
+  - **Body**:
+    - **optional**: `name`, `email`, `role`, `password`, `is_active`
+  - **Response**: `{ "code": "SUCCESS", "message": "Cập nhật nhân viên thành công.", "data": { ... } }`
 
-## Security Vulnerabilities
+- **DELETE** `/api/tenant/staff/{id}`
+  - **Mô tả**: Xóa (hoặc vô hiệu hóa) nhân viên.
+  - **Response 204**: No Content
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).

@@ -18,7 +18,7 @@ class OrderResource extends JsonResource
             'source_channel'     => $this->source_channel->value,
             'service_type'       => $this->service_type,
             'status'             => $this->status->value,
-            'status_label'       => $this->status->label(),
+            'status_label'       => $this->state()->label(),
 
             // Khách hàng
             'customer_name'      => $this->customer_name,
