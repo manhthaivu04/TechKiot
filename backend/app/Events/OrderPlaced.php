@@ -23,7 +23,10 @@ use Illuminate\Queue\SerializesModels;
  *   │ [PREMIUM] DeductInventoryListener           → Trừ nguyên liệu (check gói)
  *   └────────────────────────────────────────────────────────────┘
  */
-class OrderPlaced
+use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
+use Illuminate\Broadcasting\Channel;
+
+class OrderPlaced implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
@@ -31,4 +34,14 @@ class OrderPlaced
         public readonly Order        $order,
         public readonly PlaceOrderDTO $dto,
     ) {}
+
+    public function broadcastOn(): Channel
+    {
+        return new Channel("restaurant.{$this->order->restaurant_id}.kitchen");
+    }
+
+    public function broadcastAs(): string
+    {
+        return 'OrderPlaced';
+    }
 }

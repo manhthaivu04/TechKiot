@@ -35,10 +35,12 @@ use App\Services\Orders\Actions\TransitionOrderAction;
 class OrderService implements OrderServiceInterface
 {
     public function __construct(
-        private readonly PlaceOrderAction      $placeOrderAction,
-        private readonly AddItemsToOrderAction $addItemsToOrderAction,
-        private readonly RecordPaymentAction   $recordPaymentAction,
-        private readonly TransitionOrderAction $transitionOrderAction,
+        private readonly PlaceOrderAction        $placeOrderAction,
+        private readonly AddItemsToOrderAction   $addItemsToOrderAction,
+        private readonly RecordPaymentAction     $recordPaymentAction,
+        private readonly TransitionOrderAction   $transitionOrderAction,
+        private readonly \App\Services\Orders\Actions\RemoveOrderItemAction $removeOrderItemAction,
+        private readonly \App\Services\Orders\Actions\UpdateOrderItemAction $updateOrderItemAction,
     ) {}
 
     public function placeOrder(PlaceOrderDTO $dto): Order
@@ -64,5 +66,15 @@ class OrderService implements OrderServiceInterface
     public function transition(Order $order, OrderStatus $newStatus): Order
     {
         return $this->transitionOrderAction->execute($order, $newStatus);
+    }
+
+    public function removeItem(Order $order, string $itemId): Order
+    {
+        return $this->removeOrderItemAction->execute($order, $itemId);
+    }
+
+    public function updateItem(Order $order, string $itemId, array $data): Order
+    {
+        return $this->updateOrderItemAction->execute($order, $itemId, $data);
     }
 }

@@ -14,6 +14,16 @@ class ServedState extends OrderState
         ], true);
     }
 
+    public function canAddItems(): bool
+    {
+        return false;
+    }
+
+    public function canUpdateItems(): bool
+    {
+        return false;
+    }
+
     public function label(): string
     {
         return 'Đã phục vụ';

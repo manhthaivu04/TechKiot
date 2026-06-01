@@ -127,6 +127,33 @@ class PublicOrderController extends Controller
      *
      * @throws \Illuminate\Database\Eloquent\ModelNotFoundException Nếu token không hợp lệ
      */
+    /**
+     * POST /api/public/orders/{id}/items
+     * Cho phép khách gọi thêm món vào đơn hàng hiện tại.
+     */
+    public function addItems(\App\Http\Requests\Order\AddOrderItemsRequest $request, string $id): JsonResponse
+    {
+        $validated = $request->validated();
+
+        $order = \App\Models\Order::query()->findOrFail($id);
+
+        // Chuyển array thành DTO
+        $newItems = array_map(fn($item) => new \App\DTOs\PlaceOrderItemDTO(
+            itemId: $item['item_id'],
+            quantity: $item['quantity'],
+            note: $item['note'] ?? null,
+        ), $validated['items']);
+
+        // Gọi qua OrderService, dùng chung DTO và Pipeline của chức năng gọi thêm món
+        $order = $this->orderService->addItems($order, $newItems);
+
+        return $this->successResponse(
+            data:    new OrderResource($order),
+            message: 'Đã gọi thêm món thành công!',
+            code:    \App\Enums\ApiCode::SUCCESS
+        );
+    }
+
     private function resolveRestaurantId(string $publicToken, OrderSourceChannel $channel): string
     {
         return match ($channel) {

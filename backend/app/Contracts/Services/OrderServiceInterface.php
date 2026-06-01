@@ -30,4 +30,14 @@ interface OrderServiceInterface
     ): Payment;
 
     public function transition(Order $order, OrderStatus $newStatus): Order;
+
+    public function removeItem(Order $order, string $itemId): Order;
+
+    /**
+     * @param Order $order
+     * @param string $itemId
+     * @param array{quantity?: int, note?: string} $data
+     * @return Order
+     */
+    public function updateItem(Order $order, string $itemId, array $data): Order;
 }

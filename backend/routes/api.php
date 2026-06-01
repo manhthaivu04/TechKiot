@@ -37,6 +37,8 @@ Route::prefix('public')->name('public.')->group(function () {
         ->name('orders.store');
     Route::get('orders/{id}', [\App\Http\Controllers\Api\Public\PublicOrderController::class, 'show'])
         ->name('orders.show');
+    Route::post('orders/{id}/items', [\App\Http\Controllers\Api\Public\PublicOrderController::class, 'addItems'])
+        ->name('orders.items.store');
 });
 
 
@@ -101,6 +103,8 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('orders/{id}', [\App\Http\Controllers\Api\Tenant\OrderController::class, 'show'])->name('orders.show');
             Route::patch('orders/{id}/status', [\App\Http\Controllers\Api\Tenant\OrderController::class, 'updateStatus'])->name('orders.status');
             Route::post('orders/{id}/items', [\App\Http\Controllers\Api\Tenant\OrderController::class, 'addItems'])->name('orders.items.store');
+            Route::patch('orders/{id}/items/{itemId}', [\App\Http\Controllers\Api\Tenant\OrderController::class, 'updateItem'])->name('orders.items.update');
+            Route::delete('orders/{id}/items/{itemId}', [\App\Http\Controllers\Api\Tenant\OrderController::class, 'removeItem'])->name('orders.items.destroy');
             Route::post('orders/{id}/payments', [\App\Http\Controllers\Api\Tenant\OrderController::class, 'storePayment'])->name('orders.payments.store');
         });
 

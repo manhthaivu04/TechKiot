@@ -47,6 +47,14 @@ abstract class OrderState
     }
 
     /**
+     * Kiểm tra xem ở trạng thái này có được phép bỏ món / cập nhật số lượng không.
+     */
+    public function canUpdateItems(): bool
+    {
+        return true;
+    }
+
+    /**
      * Thực hiện chuyển trạng thái
      * Đặt logic thực thi side-effects (nếu có) khi chuyển đổi trạng thái tại đây.
      */

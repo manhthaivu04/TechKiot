@@ -25,4 +25,9 @@ class PaidState extends OrderState
     {
         return false;
     }
+
+    public function canUpdateItems(): bool
+    {
+        return false;
+    }
 }

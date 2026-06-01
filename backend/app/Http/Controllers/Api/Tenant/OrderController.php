@@ -184,4 +184,47 @@ class OrderController extends Controller
             code:    \App\Enums\ApiCode::SUCCESS
         );
     }
+    /**
+     * PATCH /api/tenant/orders/{id}/items/{itemId}
+     * Cập nhật số lượng / ghi chú của 1 món
+     */
+    public function updateItem(\App\Http\Requests\Order\UpdateOrderItemRequest $request, string $id, string $itemId): JsonResponse
+    {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+
+        $order = Order::query()
+            ->where('restaurant_id', $user->restaurant_id)
+            ->findOrFail($id);
+
+        $order = $this->orderService->updateItem($order, $itemId, $request->validated());
+
+        return $this->successResponse(
+            data:    new OrderResource($order),
+            message: 'Đã cập nhật món ăn thành công.',
+            code:    \App\Enums\ApiCode::SUCCESS
+        );
+    }
+
+    /**
+     * DELETE /api/tenant/orders/{id}/items/{itemId}
+     * Hủy món khỏi đơn hàng
+     */
+    public function removeItem(string $id, string $itemId): JsonResponse
+    {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+
+        $order = Order::query()
+            ->where('restaurant_id', $user->restaurant_id)
+            ->findOrFail($id);
+
+        $order = $this->orderService->removeItem($order, $itemId);
+
+        return $this->successResponse(
+            data:    new OrderResource($order),
+            message: 'Đã hủy món thành công.',
+            code:    \App\Enums\ApiCode::SUCCESS
+        );
+    }
 }

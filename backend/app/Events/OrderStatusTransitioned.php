@@ -21,7 +21,10 @@ use Illuminate\Queue\SerializesModels;
  *   │ [PREMIUM] TriggerInventoryAdjust      → Điều chỉnh kho khi cancel
  *   └─────────────────────────────────────────────────────────────────┘
  */
-class OrderStatusTransitioned
+use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
+use Illuminate\Broadcasting\Channel;
+
+class OrderStatusTransitioned implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
@@ -30,4 +33,14 @@ class OrderStatusTransitioned
         public readonly OrderStatus $from,
         public readonly OrderStatus $to,
     ) {}
+
+    public function broadcastOn(): Channel
+    {
+        return new Channel("order.{$this->order->id}");
+    }
+
+    public function broadcastAs(): string
+    {
+        return 'OrderStatusTransitioned';
+    }
 }
