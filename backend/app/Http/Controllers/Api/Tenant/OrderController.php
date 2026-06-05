@@ -140,7 +140,7 @@ class OrderController extends Controller
 
         $payment = $this->orderService->recordPayment(
             order:       $order,
-            amount:      (float) $validated['amount'],
+            amount:      isset($validated['amount']) ? (float) $validated['amount'] : null,
             method:      $validated['payment_method'],
             createdBy:   $user->id,
             referenceNo: $validated['reference_no'] ?? null,

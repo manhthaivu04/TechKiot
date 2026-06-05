@@ -16,7 +16,7 @@ class RecordPaymentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'amount'         => ['required', 'numeric', 'min:0.01'],
+            'amount'         => ['nullable', 'numeric', 'min:0.01'],
             'payment_method' => ['required', Rule::enum(PaymentMethod::class)],
             'reference_no'   => ['nullable', 'string', 'max:255'],
         ];

@@ -55,7 +55,7 @@ class OrderService implements OrderServiceInterface
 
     public function recordPayment(
         Order   $order,
-        float   $amount,
+        ?float  $amount,
         string  $method,
         string  $createdBy,
         ?string $referenceNo = null,

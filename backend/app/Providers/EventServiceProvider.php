@@ -54,5 +54,13 @@ class EventServiceProvider extends ServiceProvider
             // TODO [PRO]:     \App\Listeners\UpdateTableStatusListener::class,
             // TODO [PREMIUM]: \App\Listeners\AdjustInventoryOnCancelListener::class,
         ],
+
+        // ── Khi có thanh toán được ghi nhận ──────────────────────────────────
+        \App\Events\PaymentRecorded::class => [
+            \App\Listeners\PrintReceiptListener::class, // [BASIC]   Log/in hóa đơn
+
+            // TODO [PRO]:     \App\Listeners\NotifyCustomerListener::class,
+            // TODO [PREMIUM]: \App\Listeners\SendReceiptEmailListener::class,
+        ],
     ];
 }
