@@ -12,6 +12,7 @@ use App\Contracts\Services\PackageServiceInterface;
 use App\Contracts\Services\RestaurantServiceInterface;
 use App\Contracts\Services\SubscriptionServiceInterface;
 use App\Contracts\Services\UserServiceInterface;
+use App\Contracts\Services\StaffServiceInterface;
 use App\Repositories\Eloquent\FeatureRepository;
 use App\Repositories\Eloquent\PackageRepository;
 use App\Repositories\Eloquent\RestaurantRepository;
@@ -22,14 +23,27 @@ use App\Services\PackageService;
 use App\Services\RestaurantService;
 use App\Services\SubscriptionService;
 use App\Services\UserService;
+use App\Services\StaffService;
 use App\Contracts\Repositories\ItemGroupRepositoryInterface;
 use App\Contracts\Repositories\ItemRepositoryInterface;
 use App\Contracts\Services\ItemGroupServiceInterface;
 use App\Contracts\Services\ItemServiceInterface;
+use App\Contracts\Services\OrderServiceInterface;
 use App\Repositories\Eloquent\ItemGroupRepository;
 use App\Repositories\Eloquent\ItemRepository;
 use App\Services\ItemGroupService;
 use App\Services\ItemService;
+use App\Services\OrderService;
+use App\Services\Orders\Actions\AddItemsToOrderAction;
+use App\Services\Orders\Actions\PlaceOrderAction;
+use App\Services\Orders\Actions\RecordPaymentAction;
+use App\Services\Orders\Actions\TransitionOrderAction;
+// ── Menu Module ────────────────────────────────────────────────────────────
+use App\Contracts\Menu\MenuSourceStrategy;
+use App\Services\Menu\MenuGrouper;
+use App\Services\Menu\MenuService;
+use App\Services\Menu\MenuStrategyResolver;
+use App\Services\Menu\Strategies\QrStaticMenuStrategy;
 use Illuminate\Support\ServiceProvider;
 
 /**
@@ -59,7 +73,27 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(PackageServiceInterface::class,    PackageService::class);
         $this->app->bind(SubscriptionServiceInterface::class, SubscriptionService::class);
         $this->app->bind(UserServiceInterface::class,       UserService::class);
+        $this->app->bind(StaffServiceInterface::class,      StaffService::class);
         $this->app->bind(ItemGroupServiceInterface::class, ItemGroupService::class);
         $this->app->bind(ItemServiceInterface::class, ItemService::class);
+        $this->app->bind(OrderServiceInterface::class, OrderService::class);
+
+        // ── Order Action Classes ────────────────────────────────────────────
+        // Stateless — an toàn dùng singleton để tái sử dụng qua nhiều requests.
+        // Controller có thể inject thẳng Action thay vì qua OrderService nếu muốn.
+        $this->app->singleton(PlaceOrderAction::class);
+        $this->app->singleton(AddItemsToOrderAction::class);
+        $this->app->singleton(RecordPaymentAction::class);
+        $this->app->singleton(TransitionOrderAction::class);
+
+        // ── Menu Module ────────────────────────────────────────────────────
+        // MenuService và Resolver được đăng ký là singleton vì không có state
+        // (giống OrderService — stateless, safe to share across requests).
+        $this->app->singleton(MenuStrategyResolver::class);
+        $this->app->singleton(MenuGrouper::class);
+        $this->app->singleton(MenuService::class);
+
+        // Các Strategy được tạo mới mỗi lần (app() trong Resolver lo việc này)
+        $this->app->bind(QrStaticMenuStrategy::class);
     }
 }

@@ -48,7 +48,7 @@ class Restaurant extends Model
     {
         return $this->hasOne(RestaurantSubscription::class)
             ->where('status', 'active')
-            ->latestOfMany();
+            ->latestOfMany('created_at');
     }
 
     // ─── Helpers ─────────────────────────────────────────────────────────────
