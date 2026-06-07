@@ -38,13 +38,17 @@ class CalculatePricingPipe implements OrderPipeInterface
                 ->get()
                 ->keyBy('id');
 
+        // Logic xác định service_type
+        $resolvedServiceType = $dto->serviceType 
+            ?: (in_array($dto->sourceChannel->value, ['qr_static', 'qr_table']) || $dto->tableId ? 'dine_in' : 'takeaway');
+
         // ── Tạo Order ────────────────────────────────────────────────────────
         $order = Order::create([
             'restaurant_id'      => $dto->restaurantId,
             'table_id'           => $dto->tableId,
             'order_code'         => $this->generateOrderCode($dto->restaurantId),
             'source_channel'     => $dto->sourceChannel,
-            'service_type'       => $dto->tableId ? 'dine_in' : 'takeaway',
+            'service_type'       => $resolvedServiceType,
             'status'             => OrderStatus::Open,
             'customer_name'      => $dto->customerName,
             'customer_phone'     => $dto->customerPhone,

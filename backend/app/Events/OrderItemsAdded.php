@@ -23,9 +23,12 @@ class OrderItemsAdded implements ShouldBroadcastNow
         public array $newItems,
     ) {}
 
-    public function broadcastOn(): Channel
+    public function broadcastOn(): array
     {
-        return new Channel("restaurant.{$this->order->restaurant_id}.kitchen");
+        return [
+            new Channel("order.{$this->order->id}"),
+            new Channel("restaurant.{$this->order->restaurant_id}.kitchen"),
+        ];
     }
 
     public function broadcastAs(): string

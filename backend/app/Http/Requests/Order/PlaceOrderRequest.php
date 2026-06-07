@@ -34,6 +34,7 @@ class PlaceOrderRequest extends FormRequest
             'items.*.note'       => ['nullable', 'string', 'max:255'],
 
             // Optional — Pro fields (nhận vào nhưng validate nhẹ)
+            'service_type'       => ['nullable', 'string', 'in:takeaway,dine_in,delivery,TAKEAWAY,DINE_IN,DELIVERY'],
             'table_id'           => ['nullable', 'uuid'],
             'guest_count'        => ['nullable', 'integer', 'min:1', 'max:999'],
             'customer_name'      => ['nullable', 'string', 'max:100'],

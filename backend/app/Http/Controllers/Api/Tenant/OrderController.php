@@ -67,9 +67,22 @@ class OrderController extends Controller
 
         $orders = Order::query()
             ->where('restaurant_id', $user->restaurant_id)
+            ->when(request('status'), function ($q, $status) {
+                $q->where('status', $status);
+            })
+            ->when(request('service_type'), function ($q, $type) {
+                $q->where('service_type', $type);
+            })
+            ->when(request('search'), function ($q, $search) {
+                $q->where(function ($q2) use ($search) {
+                    $q2->where('order_code', 'LIKE', "%{$search}%")
+                       ->orWhere('customer_name', 'LIKE', "%{$search}%")
+                       ->orWhere('customer_phone', 'LIKE', "%{$search}%");
+                });
+            })
             ->with(['items.item', 'payments'])
             ->latest()
-            ->paginate(20);
+            ->paginate(50); // Increased pagination slightly for kanban view
 
         return $this->successResponse([
             'items' => OrderResource::collection($orders->items()),
