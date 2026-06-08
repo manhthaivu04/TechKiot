@@ -26,14 +26,22 @@ use App\Services\UserService;
 use App\Services\StaffService;
 use App\Contracts\Repositories\ItemGroupRepositoryInterface;
 use App\Contracts\Repositories\ItemRepositoryInterface;
+use App\Contracts\Repositories\TableAreaRepositoryInterface;
+use App\Contracts\Repositories\RestaurantTableRepositoryInterface;
 use App\Contracts\Services\ItemGroupServiceInterface;
 use App\Contracts\Services\ItemServiceInterface;
 use App\Contracts\Services\OrderServiceInterface;
+use App\Contracts\Services\TableAreaServiceInterface;
+use App\Contracts\Services\RestaurantTableServiceInterface;
 use App\Repositories\Eloquent\ItemGroupRepository;
 use App\Repositories\Eloquent\ItemRepository;
+use App\Repositories\Eloquent\TableAreaRepository;
+use App\Repositories\Eloquent\RestaurantTableRepository;
 use App\Services\ItemGroupService;
 use App\Services\ItemService;
 use App\Services\OrderService;
+use App\Services\TableAreaService;
+use App\Services\RestaurantTableService;
 use App\Services\Orders\Actions\AddItemsToOrderAction;
 use App\Services\Orders\Actions\PlaceOrderAction;
 use App\Services\Orders\Actions\RecordPaymentAction;
@@ -66,6 +74,8 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(UserRepositoryInterface::class,       UserRepository::class);
         $this->app->bind(ItemGroupRepositoryInterface::class, ItemGroupRepository::class);
         $this->app->bind(ItemRepositoryInterface::class, ItemRepository::class);
+        $this->app->bind(TableAreaRepositoryInterface::class, TableAreaRepository::class);
+        $this->app->bind(RestaurantTableRepositoryInterface::class, RestaurantTableRepository::class);
 
         // ── Services ───────────────────────────────────────────────────────────
         $this->app->bind(RestaurantServiceInterface::class, RestaurantService::class);
@@ -77,6 +87,8 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(ItemGroupServiceInterface::class, ItemGroupService::class);
         $this->app->bind(ItemServiceInterface::class, ItemService::class);
         $this->app->bind(OrderServiceInterface::class, OrderService::class);
+        $this->app->bind(TableAreaServiceInterface::class, TableAreaService::class);
+        $this->app->bind(RestaurantTableServiceInterface::class, RestaurantTableService::class);
 
         // ── Order Action Classes ────────────────────────────────────────────
         // Stateless — an toàn dùng singleton để tái sử dụng qua nhiều requests.

@@ -58,13 +58,12 @@ class Order extends Model
     }
 
     /**
-     * Quan hệ table chỉ có nghĩa khi gói Pro (TABLE_MANAGEMENT) được kích hoạt.
-     * Giữ relationship ở đây để ORM sẵn sàng, tránh migration khi nâng gói.
+     * Quan hệ table — trỏ tới RestaurantTable (module TABLE_MANAGEMENT).
+     * Relationship nullable (table_id = null khi đơn không gắn bàn).
      */
     public function table(): BelongsTo
     {
-        // Model Table sẽ được tạo khi implement Pro module
-        return $this->belongsTo(\App\Models\Table::class, 'table_id');
+        return $this->belongsTo(RestaurantTable::class, 'table_id');
     }
 
     public function items(): HasMany

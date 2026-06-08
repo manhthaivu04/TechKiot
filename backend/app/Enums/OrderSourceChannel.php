@@ -18,7 +18,7 @@ enum OrderSourceChannel: string
     case Cashier   = 'cashier';    // POS_QUICK_ORDER
     case QrStatic  = 'qr_static';  // QR_STATIC_ORDER
 
-    // Pro (chỉ uncomment khi implement Pro module)
+    // Pro (enum giữ lại cho tương lai — chưa hỗ trợ ở public order, xem PublicPlaceOrderRequest)
     case QrTable   = 'qr_table';   // QR_TABLE_ORDER
 
     // Waiter app (tương lai)

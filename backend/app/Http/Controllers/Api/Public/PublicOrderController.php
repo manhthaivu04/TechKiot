@@ -14,6 +14,10 @@ use Illuminate\Http\JsonResponse;
 /**
  * PublicOrderController — Cho phép khách hàng tự đặt món qua mã QR.
  *
+ * HIỆN CHỈ HỖ TRỢ kênh `qr_static` (QR tĩnh nhà hàng).
+ * Kênh `qr_table` (QR theo bàn — gói Pro) chưa kích hoạt ở public order vì
+ * qr_token sinh dạng `tbl_{uuid}` và luồng gán order vào bàn chưa hoàn thiện.
+ *
  * ── Design Patterns áp dụng ──────────────────────────────────────────────────
  *
  * 1. Facade Pattern (OrderService):
@@ -23,10 +27,9 @@ use Illuminate\Http\JsonResponse;
  *    không cần nhân đôi business logic.
  *
  * 2. Strategy Pattern (Chạy ngầm bên dưới):
- *    PlaceOrderDTO chứa source_channel = qr_static hoặc qr_table.
+ *    PlaceOrderDTO chứa source_channel = qr_static.
  *    PlaceOrderAction sẽ dựa vào đây để kích hoạt đúng Strategy:
  *    → QrStaticOrderStrategy: bắn thông báo real-time cho nhân viên.
- *    → QrTableOrderStrategy (Pro): gán order vào bàn, update status bàn.
  *    Controller không biết Strategy nào đang chạy — hoàn toàn minh bạch.
  *
  * 3. DTO Pattern (PlaceOrderDTO):
@@ -43,7 +46,7 @@ use Illuminate\Http\JsonResponse;
  * PublicOrderController (file này):
  *   - restaurant_id được RESOLVE từ public_token trong QR (không phải Auth)
  *   - created_by    = 'system_qr' (placeholder — không có user đăng nhập)
- *   - source_channel: chỉ qr_static | qr_table (FormRequest đã chặn cashier)
+ *   - source_channel: chỉ qr_static (FormRequest đã chặn cashier + qr_table)
  *
  * SRP: Controller chỉ làm 4 việc: Nhận Request → Resolve context → Build DTO → Return JSON.
  */
@@ -57,8 +60,8 @@ class PublicOrderController extends Controller
      * POST /api/public/orders
      *
      * Body:
-     *   - public_token:   UUID (restaurant_id cho qr_static | table_id cho qr_table)
-     *   - source_channel: string (qr_static | qr_table)
+     *   - public_token:   UUID (restaurant_id — từ QR tĩnh)
+     *   - source_channel: string (chỉ qr_static)
      *   - items:          array[{item_id, quantity, note?}]
      *   - customer_name?  string
      *   - customer_phone? string
@@ -72,9 +75,7 @@ class PublicOrderController extends Controller
         // Khác với nhân viên (lấy từ Auth token), khách hàng không đăng nhập.
         // Chúng ta phải dùng public_token trong QR Code để xác định nhà hàng.
         //
-        // Logic resolve phụ thuộc vào source_channel:
-        //   QrStatic: public_token = restaurant_id (trực tiếp)
-        //   QrTable:  public_token = table_id → cần query bảng tables để ra restaurant_id
+        // Hiện tại chỉ có QrStatic: public_token = restaurant_id (UUID).
         $restaurantId = $this->resolveRestaurantId(
             publicToken: $validated['public_token'],
             channel:     OrderSourceChannel::from($validated['source_channel']),
@@ -115,19 +116,6 @@ class PublicOrderController extends Controller
     // ─── Private Helpers ──────────────────────────────────────────────────────
 
     /**
-     * Resolve restaurant_id từ public_token tùy theo loại QR.
-     *
-     * ── Template Method Pattern (đơn giản hóa) ──────────────────────────────
-     * Mỗi loại QR có cách resolve khác nhau:
-     *   QrStatic: public_token chính là restaurant_id → query trực tiếp.
-     *   QrTable:  public_token là table_id → phải join qua bảng tables.
-     *
-     * Khi thêm loại QR mới (VD: QrSession) → chỉ thêm case mới vào match,
-     * không sửa gì ở trên (Open/Closed).
-     *
-     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException Nếu token không hợp lệ
-     */
-    /**
      * POST /api/public/orders/{id}/items
      * Cho phép khách gọi thêm món vào đơn hàng hiện tại.
      */
@@ -154,6 +142,20 @@ class PublicOrderController extends Controller
         );
     }
 
+    /**
+     * Resolve restaurant_id từ public_token.
+     *
+     * Hiện tại chỉ hỗ trợ QrStatic (public_token = restaurant_id dạng UUID).
+     *
+     * QrTable chưa kích hoạt vì:
+     *   - qr_token bàn sinh dạng `tbl_{uuid}` (không phải UUID thuần).
+     *   - Luồng gán order vào bàn + update trạng thái bàn chưa implement.
+     *   - FormRequest đã chặn source_channel=qr_table → nhánh này không thể vào.
+     * Khi module QR bàn sẵn sàng, thêm lại case QrTable ở đây.
+     *
+     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException Nếu token không hợp lệ
+     * @throws \DomainException Nếu kênh không được hỗ trợ
+     */
     private function resolveRestaurantId(string $publicToken, OrderSourceChannel $channel): string
     {
         return match ($channel) {
@@ -162,10 +164,6 @@ class PublicOrderController extends Controller
                 Restaurant::findOrFail($publicToken)->id,
                 fn() => null // tap() chỉ để đảm bảo trả về string id
             ),
-
-            // QR Bàn (Pro): public_token = table_id → tìm bàn rồi lấy restaurant_id
-            // Table model sẽ được implement khi mở Pro module
-            OrderSourceChannel::QrTable => \App\Models\Table::findOrFail($publicToken)->restaurant_id,
 
             // Các kênh nội bộ không bao giờ vào đây (FormRequest đã chặn)
             default => throw new \DomainException("Kênh [{$channel->value}] không được phép đặt hàng công khai."),
