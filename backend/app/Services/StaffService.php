@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Contracts\Repositories\UserRepositoryInterface;
 use App\Contracts\Services\StaffServiceInterface;
 use App\Enums\UserRole;
+use App\Models\Restaurant;
 use App\Models\User;
 use Illuminate\Validation\ValidationException;
 
@@ -39,6 +40,8 @@ class StaffService implements StaffServiceInterface
             ]);
         }
 
+        $this->checkRoleLimit($restaurantId, $data['role']);
+
         $payload = [
             'restaurant_id' => $restaurantId,
             'name'          => $data['name'],
@@ -62,6 +65,10 @@ class StaffService implements StaffServiceInterface
             throw ValidationException::withMessages([
                 'email' => ['The email has already been taken.'],
             ]);
+        }
+
+        if (isset($data['role']) && $data['role'] !== $user->role->value) {
+            $this->checkRoleLimit($restaurantId, $data['role']);
         }
 
         $payload = [
@@ -97,6 +104,35 @@ class StaffService implements StaffServiceInterface
         ]);
 
         return $updated;
+    }
+
+    private function checkRoleLimit(string $restaurantId, string $role): void
+    {
+        $restaurant = Restaurant::with('subscriptions.package')->find($restaurantId);
+        $activeSub = $restaurant?->activeSubscription;
+
+        if (! $activeSub || ! $activeSub->package) {
+            return;
+        }
+
+        $limits = $activeSub->package->role_limits;
+        if (! is_array($limits) || ! isset($limits[$role])) {
+            return; // Unlimited if not specified
+        }
+
+        $limit = (int) $limits[$role];
+
+        // We count active users with this role to allow replacing deactivated staff
+        $currentCount = User::where('restaurant_id', $restaurantId)
+            ->where('role', $role)
+            ->where('is_active', true)
+            ->count();
+
+        if ($currentCount >= $limit) {
+            throw ValidationException::withMessages([
+                'role' => ["Giới hạn gói cước: Bạn chỉ được tạo tối đa {$limit} tài khoản chức vụ này."],
+            ]);
+        }
     }
 }
 
