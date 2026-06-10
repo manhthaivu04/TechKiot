@@ -9,6 +9,13 @@ use Illuminate\Validation\Rule;
 /**
  * PublicPlaceOrderRequest — Validate đơn đặt món từ khách hàng quét QR.
  *
+ * HIỆN CHỈ HỖ TRỢ `qr_static` (QR tĩnh nhà hàng).
+ * `qr_table` (QR theo bàn — gói Pro) CHƯA được hỗ trợ ở public order vì:
+ *   - qr_token của bàn sinh dạng `tbl_{uuid}` (không phải UUID thuần).
+ *   - Luồng QR bàn (gán order vào bàn, update trạng thái bàn) chưa hoàn thiện.
+ * Khi module QR bàn sẵn sàng, thêm lại QrTable vào whitelist và mở rộng
+ * validation `public_token` cho phù hợp.
+ *
  * ── Khác biệt với PlaceOrderRequest (Tenant) ────────────────────────────────
  * PlaceOrderRequest (Tenant):
  *   - source_channel cho phép: cashier, qr_static, qr_table
@@ -16,9 +23,9 @@ use Illuminate\Validation\Rule;
  *   - Không cần public_token
  *
  * PublicPlaceOrderRequest (Public / Guest):
- *   - source_channel chỉ cho phép: qr_static, qr_table  (Bảo vệ: Khách không được giả mạo kênh cashier)
+ *   - source_channel chỉ cho phép: qr_static (xem lý do ở trên)
  *   - restaurant_id được RESOLVE từ public_token trong Controller (không phải Auth)
- *   - Bắt buộc có public_token để Controller biết nhà hàng nào
+ *   - Bắt buộc có public_token (UUID restaurant_id) để Controller biết nhà hàng nào
  *   - Không cần Sanctum token — authorize() luôn true
  *
  * ── Design Pattern áp dụng ──────────────────────────────────────────────────
@@ -40,12 +47,11 @@ class PublicPlaceOrderRequest extends FormRequest
             // Token nhúng trong QR code — Controller dùng để resolve restaurant_id
             'public_token' => ['required', 'string', 'uuid'],
 
-            // Chỉ cho phép các kênh QR — KHÔNG cho phép 'cashier' (kênh nội bộ nhân viên)
+            // Chỉ cho phép QR tĩnh — QR bàn (qr_table) chưa hỗ trợ, cashier là kênh nội bộ
             'source_channel' => [
                 'required',
                 Rule::in([
                     OrderSourceChannel::QrStatic->value,
-                    OrderSourceChannel::QrTable->value,
                 ]),
             ],
 
@@ -70,7 +76,7 @@ class PublicPlaceOrderRequest extends FormRequest
             'public_token.required'     => 'QR Code không hợp lệ (thiếu token).',
             'public_token.uuid'         => 'QR Code không hợp lệ (token sai định dạng).',
             'source_channel.required'   => 'Vui lòng chỉ định kênh đặt hàng.',
-            'source_channel.in'         => 'Kênh đặt hàng không hợp lệ.',
+            'source_channel.in'         => 'Hiện chỉ hỗ trợ đặt món qua QR tĩnh của nhà hàng (qr_static).',
             'items.required'            => 'Vui lòng chọn ít nhất một món.',
             'items.*.item_id.uuid'      => 'ID món hàng không hợp lệ.',
             'items.*.quantity.min'      => 'Số lượng tối thiểu là 1.',

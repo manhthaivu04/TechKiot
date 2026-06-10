@@ -7,6 +7,8 @@ use App\Http\Controllers\Admin\RestaurantController;
 use App\Http\Controllers\Admin\SubscriptionController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Api\Tenant\StaffController;
+use App\Http\Controllers\Api\Tenant\TableAreaController;
+use App\Http\Controllers\Api\Tenant\RestaurantTableController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -109,8 +111,10 @@ Route::middleware('auth:sanctum')->group(function () {
         });
 
         // Pro Features
-        Route::middleware('feature:TABLE_MANAGEMENT')->group(function () {
-            // Route::apiResource('tables', TableController::class);
+        // Pro Features — Table Management (OWNER only)
+        Route::middleware(['feature:TABLE_MANAGEMENT', 'role:OWNER'])->group(function () {
+            Route::apiResource('table-areas', TableAreaController::class);
+            Route::apiResource('restaurant-tables', RestaurantTableController::class);
         });
 
         Route::middleware(['feature:STAFF_MANAGEMENT', 'role:OWNER,MANAGER'])->group(function () {

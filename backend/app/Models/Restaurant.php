@@ -80,4 +80,14 @@ class Restaurant extends Model
     {
         return $this->status->isAccessible();
     }
+
+    public function tableAreas(): HasMany
+    {
+        return $this->hasMany(TableArea::class);
+    }
+
+    public function tables(): HasMany
+    {
+        return $this->hasMany(RestaurantTable::class);
+    }
 }
