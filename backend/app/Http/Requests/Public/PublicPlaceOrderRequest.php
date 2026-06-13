@@ -45,7 +45,7 @@ class PublicPlaceOrderRequest extends FormRequest
     {
         return [
             // Token nhúng trong QR code — Controller dùng để resolve restaurant_id
-            'public_token' => ['required', 'string', 'uuid'],
+            'public_token' => ['required', 'string'],
 
             // Chỉ cho phép QR tĩnh — QR bàn (qr_table) chưa hỗ trợ, cashier là kênh nội bộ
             'source_channel' => [

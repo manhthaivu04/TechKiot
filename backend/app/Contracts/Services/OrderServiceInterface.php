@@ -5,11 +5,12 @@ namespace App\Contracts\Services;
 use App\DTOs\PlaceOrderDTO;
 use App\Enums\OrderStatus;
 use App\Models\Order;
-use App\Models\Payment;
 
 /**
  * Contract cho OrderService.
  * Đăng ký trong RepositoryServiceProvider để DI container biết bind.
+ *
+ * Lưu ý: recordPayment() đã được tách sang PaymentServiceInterface.
  */
 interface OrderServiceInterface
 {
@@ -20,14 +21,6 @@ interface OrderServiceInterface
      * @param \App\DTOs\PlaceOrderItemDTO[] $newItems
      */
     public function addItems(Order $order, array $newItems): Order;
-
-    public function recordPayment(
-        Order   $order,
-        ?float  $amount,
-        string  $method,
-        string  $createdBy,
-        ?string $referenceNo = null,
-    ): Payment;
 
     public function transition(Order $order, OrderStatus $newStatus): Order;
 

@@ -16,6 +16,7 @@ class UpdateOrderItemRequest extends FormRequest
         return [
             'quantity' => ['sometimes', 'required', 'integer', 'min:1', 'max:999'],
             'note'     => ['sometimes', 'nullable', 'string', 'max:255'],
+            'status'   => ['sometimes', 'required', 'string', \Illuminate\Validation\Rule::enum(\App\Enums\OrderItemStatus::class)],
         ];
     }
 }

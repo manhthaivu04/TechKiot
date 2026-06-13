@@ -31,7 +31,7 @@ class EventServiceProvider extends ServiceProvider
      */
     protected $listen = [
 
-        // ── Khi có đơn hàng mới ──────────────────────────────────────────────
+            // ── Khi có đơn hàng mới ──────────────────────────────────────────────
         OrderPlaced::class => [
             NotifyKitchenListener::class,              // [BASIC]   Báo màn hình KDS
             HandleOrderSourceStrategyListener::class,  // [BASIC]   Trigger QR/POS Strategy
@@ -43,11 +43,11 @@ class EventServiceProvider extends ServiceProvider
 
         // ── Khi khách gọi thêm món ──────────────────────────────────────────
         \App\Events\OrderItemsAdded::class => [
-            // Re-use listener hoặc tạo listener mới (VD: NotifyKitchenAddedItemsListener)
-            NotifyKitchenListener::class, 
+                // Re-use listener hoặc tạo listener mới (VD: NotifyKitchenAddedItemsListener)
+            NotifyKitchenListener::class,
         ],
 
-        // ── Khi trạng thái đơn hàng thay đổi ────────────────────────────────
+            // ── Khi trạng thái đơn hàng thay đổi ────────────────────────────────
         OrderStatusTransitioned::class => [
             NotifyKitchenStatusListener::class,        // [BASIC]   Báo KDS chuyển trạng thái
 

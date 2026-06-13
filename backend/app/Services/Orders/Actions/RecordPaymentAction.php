@@ -41,7 +41,7 @@ class RecordPaymentAction
         string  $createdBy,
         ?string $referenceNo = null,
     ): Payment {
-        return DB::transaction(function () use ($order, $amount, $method, $createdBy, $referenceNo): Payment {
+        $payment = DB::transaction(function () use ($order, $amount, $method, $createdBy, $referenceNo): Payment {
 
             // BẢO MẬT: Không bao giờ tin tưởng Client
             $totalPaid = $order->payments()->sum('amount');
@@ -77,10 +77,12 @@ class RecordPaymentAction
                 $order->transitionTo(OrderStatus::Paid);
             }
 
-            // Bắn Event để kích hoạt PrintReceiptListener và các Listener khác
-            PaymentRecorded::dispatch($order->refresh(), $payment);
-
             return $payment;
         });
+
+        // Bắn Event để kích hoạt PrintReceiptListener và các Listener khác SAU KHI commit
+        PaymentRecorded::dispatch($order->refresh(), $payment);
+
+        return $payment;
     }
 }

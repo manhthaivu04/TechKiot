@@ -90,4 +90,23 @@ class Restaurant extends Model
     {
         return $this->hasMany(RestaurantTable::class);
     }
+
+    public function paymentMethods(): HasMany
+    {
+        return $this->hasMany(RestaurantPaymentMethod::class);
+    }
+
+    /**
+     * Kiểm tra một phương thức thanh toán có đang được bật không.
+     * Trả về true nếu chưa có config (mặc định cho phép).
+     */
+    public function isPaymentMethodActive(\App\Enums\PaymentMethod $method): bool
+    {
+        $config = $this->paymentMethods()
+            ->where('payment_method', $method->value)
+            ->first();
+
+        // Chưa có config → coi như đang bật (safe default)
+        return $config === null || $config->is_active;
+    }
 }

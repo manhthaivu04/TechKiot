@@ -20,7 +20,7 @@ class RemoveOrderItemAction
             throw new \DomainException("Không thể hủy món khi đơn hàng đã phục vụ hoặc thanh toán.");
         }
 
-        return DB::transaction(function () use ($order, $itemId) {
+        $result = DB::transaction(function () use ($order, $itemId) {
             $orderItem = $order->items()->findOrFail($itemId);
 
             // 2. Tính lại tổng tiền
@@ -34,10 +34,15 @@ class RemoveOrderItemAction
             // 4. Xóa dòng món ăn
             $orderItem->delete();
 
-            // 5. Bắn event báo cáo (vd: báo Bếp ngưng nấu)
-            OrderItemRemoved::dispatch($order, $removedItemData);
-
-            return $order->refresh()->load('items.item');
+            return [
+                'order' => $order->refresh()->load('items.item'),
+                'data'  => $removedItemData
+            ];
         });
+
+        // 5. Bắn event báo cáo (vd: báo Bếp ngưng nấu) SAU KHI transaction commit
+        OrderItemRemoved::dispatch($result['order'], $result['data']);
+
+        return $result['order'];
     }
 }

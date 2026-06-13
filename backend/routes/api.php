@@ -107,10 +107,32 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('orders/{id}/items', [\App\Http\Controllers\Api\Tenant\OrderController::class, 'addItems'])->name('orders.items.store');
             Route::patch('orders/{id}/items/{itemId}', [\App\Http\Controllers\Api\Tenant\OrderController::class, 'updateItem'])->name('orders.items.update');
             Route::delete('orders/{id}/items/{itemId}', [\App\Http\Controllers\Api\Tenant\OrderController::class, 'removeItem'])->name('orders.items.destroy');
-            Route::post('orders/{id}/payments', [\App\Http\Controllers\Api\Tenant\OrderController::class, 'storePayment'])->name('orders.payments.store');
+            // ── Payment routes (tách khỏi OrderController) ─────────────────────────
+            Route::post('orders/{id}/payments', [\App\Http\Controllers\Api\Tenant\PaymentController::class, 'store'])->name('orders.payments.store');
+            Route::get('orders/{id}/payments', [\App\Http\Controllers\Api\Tenant\PaymentController::class, 'index'])->name('orders.payments.index');
         });
 
         // Pro Features
+        // ── Payment Method Settings (OWNER, MANAGER) ──────────────────────────
+        // Quản lý bật/tắt phương thức thanh toán — không cần feature guard vì
+        // đây là cấu hình cơ bản của mọi nhà hàng.
+        Route::middleware('role:OWNER,MANAGER')->group(function () {
+            Route::get('payment-method-settings', [\App\Http\Controllers\Api\Tenant\PaymentMethodSettingController::class, 'index'])
+                ->name('payment-method-settings.index');
+
+            // ⚠️ Route tĩnh (transfer/qr) PHẢI đứng TRƯỚC route động ({method}/toggle)
+            // để Laravel không nhầm "transfer" là tham số {method}
+            Route::post('payment-method-settings/transfer/qr', [\App\Http\Controllers\Api\Tenant\PaymentMethodSettingController::class, 'uploadQr'])
+                ->name('payment-method-settings.transfer.qr.upload');
+            Route::delete('payment-method-settings/transfer/qr', [\App\Http\Controllers\Api\Tenant\PaymentMethodSettingController::class, 'deleteQr'])
+                ->name('payment-method-settings.transfer.qr.delete');
+
+            Route::patch('payment-method-settings/{method}/toggle', [\App\Http\Controllers\Api\Tenant\PaymentMethodSettingController::class, 'toggle'])
+                ->name('payment-method-settings.toggle');
+            Route::patch('payment-method-settings/{method}', [\App\Http\Controllers\Api\Tenant\PaymentMethodSettingController::class, 'update'])
+                ->name('payment-method-settings.update');
+        });
+
         // Pro Features — Table Management (OWNER only)
         Route::middleware(['feature:TABLE_MANAGEMENT', 'role:OWNER'])->group(function () {
             Route::apiResource('table-areas', TableAreaController::class);

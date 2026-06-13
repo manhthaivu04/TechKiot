@@ -55,7 +55,7 @@ class PlaceOrderAction
      */
     public function execute(PlaceOrderDTO $dto): Order
     {
-        return DB::transaction(function () use ($dto): Order {
+        $order = DB::transaction(function () use ($dto): Order {
 
             // Chạy toàn bộ Pipeline
             $this->pipeline
@@ -67,11 +67,13 @@ class PlaceOrderAction
             /** @var Order $order */
             $order = request()->attributes->get('_created_order');
 
-            // Fire Event → các Listener sẽ xử lý side-effects bất đồng bộ
-            // (NotifyKitchenListener, HandleOrderSourceStrategyListener, DeductInventoryListener...)
-            OrderPlaced::dispatch($order, $dto);
-
             return $order;
         });
+
+        // Fire Event SAU KHI transaction đã commit thành công.
+        // Điều này đảm bảo Frontend gọi API (invalidateQueries) sẽ thấy được dữ liệu thật trong DB.
+        OrderPlaced::dispatch($order, $dto);
+
+        return $order;
     }
 }

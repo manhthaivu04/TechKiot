@@ -7,12 +7,9 @@ use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
-use Illuminate\Broadcasting\Channel;
-
-class OrderItemsAdded implements ShouldBroadcastNow
+class OrderItemsAdded
 {
-    use Dispatchable, InteractsWithSockets, SerializesModels;
+    use Dispatchable, SerializesModels;
 
     /**
      * @param Order $order
@@ -22,17 +19,4 @@ class OrderItemsAdded implements ShouldBroadcastNow
         public Order $order,
         public array $newItems,
     ) {}
-
-    public function broadcastOn(): array
-    {
-        return [
-            new Channel("order.{$this->order->id}"),
-            new Channel("restaurant.{$this->order->restaurant_id}.kitchen"),
-        ];
-    }
-
-    public function broadcastAs(): string
-    {
-        return 'OrderItemsAdded';
-    }
 }

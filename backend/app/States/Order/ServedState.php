@@ -16,7 +16,8 @@ class ServedState extends OrderState
 
     public function canAddItems(): bool
     {
-        return false;
+        // Cho phép gọi thêm món kể cả khi đơn đã phục vụ
+        return true;
     }
 
     public function canUpdateItems(): bool

@@ -52,6 +52,10 @@ use App\Services\Menu\MenuGrouper;
 use App\Services\Menu\MenuService;
 use App\Services\Menu\MenuStrategyResolver;
 use App\Services\Menu\Strategies\QrStaticMenuStrategy;
+// ── Payment Module ──────────────────────────────────────────────────────────
+use App\Contracts\Services\PaymentServiceInterface;
+use App\Services\PaymentService;
+use App\Services\Payments\ProcessPaymentAction;
 use Illuminate\Support\ServiceProvider;
 
 /**
@@ -89,6 +93,7 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(OrderServiceInterface::class, OrderService::class);
         $this->app->bind(TableAreaServiceInterface::class, TableAreaService::class);
         $this->app->bind(RestaurantTableServiceInterface::class, RestaurantTableService::class);
+        $this->app->bind(PaymentServiceInterface::class, PaymentService::class);
 
         // ── Order Action Classes ────────────────────────────────────────────
         // Stateless — an toàn dùng singleton để tái sử dụng qua nhiều requests.
@@ -97,6 +102,9 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->singleton(AddItemsToOrderAction::class);
         $this->app->singleton(RecordPaymentAction::class);
         $this->app->singleton(TransitionOrderAction::class);
+
+        // ── Payment Action ──────────────────────────────────────────────────
+        $this->app->singleton(ProcessPaymentAction::class);
 
         // ── Menu Module ────────────────────────────────────────────────────
         // MenuService và Resolver được đăng ký là singleton vì không có state

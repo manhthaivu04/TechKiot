@@ -159,9 +159,9 @@ class PublicOrderController extends Controller
     private function resolveRestaurantId(string $publicToken, OrderSourceChannel $channel): string
     {
         return match ($channel) {
-            // QR Tĩnh: public_token = restaurant_id, validate bằng findOrFail
+            // QR Tĩnh: public_token = public_order_token, validate bằng firstOrFail
             OrderSourceChannel::QrStatic => tap(
-                Restaurant::findOrFail($publicToken)->id,
+                Restaurant::where('public_order_token', $publicToken)->firstOrFail()->id,
                 fn() => null // tap() chỉ để đảm bảo trả về string id
             ),
 
