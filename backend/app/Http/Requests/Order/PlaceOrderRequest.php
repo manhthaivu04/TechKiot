@@ -34,6 +34,7 @@ class PlaceOrderRequest extends FormRequest
             'items.*.note'       => ['nullable', 'string', 'max:255'],
 
             // Optional — Pro fields (nhận vào nhưng validate nhẹ)
+            'service_type'       => ['nullable', 'string', 'in:takeaway,dine_in,delivery,TAKEAWAY,DINE_IN,DELIVERY'],
             'table_id'           => ['nullable', 'uuid'],
             'guest_count'        => ['nullable', 'integer', 'min:1', 'max:999'],
             'customer_name'      => ['nullable', 'string', 'max:100'],
@@ -53,5 +54,17 @@ class PlaceOrderRequest extends FormRequest
             'items.*.item_id.uuid'    => 'ID món hàng không hợp lệ.',
             'items.*.quantity.min'    => 'Số lượng tối thiểu là 1.',
         ];
+    }
+
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            if ($this->filled('table_id')) {
+                $restaurant = \App\Models\Restaurant::find($this->user()->restaurant_id);
+                if ($restaurant && ! $restaurant->hasFeature('TABLE_MANAGEMENT')) {
+                    $validator->errors()->add('table_id', 'Nhà hàng của bạn chưa đăng ký tính năng Quản lý bàn.');
+                }
+            }
+        });
     }
 }

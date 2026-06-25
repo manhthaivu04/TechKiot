@@ -46,14 +46,23 @@ class QrStaticMenuStrategy implements MenuSourceStrategy
      */
     public function getMenu(GetMenuDTO $dto): array
     {
-        // 1. Validate token: đảm bảo restaurant tồn tại
-        //    (findOrFail throw ModelNotFoundException → Laravel render 404)
-        Restaurant::findOrFail($dto->publicToken);
+        // 1. Validate token: tìm restaurant theo public_order_token
+        //    (firstOrFail throw ModelNotFoundException → Laravel render 404)
+        $restaurant = Restaurant::where('public_order_token', $dto->publicToken)->firstOrFail();
 
         // 2. Lấy items active, eager-load itemGroup (tránh N+1)
-        $items = $this->itemRepository->getActiveMenuByRestaurantId($dto->publicToken);
+        $items = $this->itemRepository->getActiveMenuByRestaurantId($restaurant->id);
 
         // 3. Gom nhóm theo danh mục và trả về
-        return $this->menuGrouper->group($items);
+        return [
+            'restaurant' => [
+                'id'         => $restaurant->id,
+                'name'       => $restaurant->name,
+                'address'    => $restaurant->address,
+                'phone'      => $restaurant->phone,
+                'banner_url' => $restaurant->banner_url,
+            ],
+            'item_groups' => $this->menuGrouper->group($items),
+        ];
     }
 }

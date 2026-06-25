@@ -21,7 +21,7 @@ class UpdateOrderItemAction
             throw new \DomainException("Không thể cập nhật món khi đơn hàng đã phục vụ hoặc thanh toán.");
         }
 
-        return DB::transaction(function () use ($order, $itemId, $data) {
+        $result = DB::transaction(function () use ($order, $itemId, $data) {
             $orderItem = $order->items()->findOrFail($itemId);
 
             // Nếu update quantity, cần tính lại tiền
@@ -43,12 +43,22 @@ class UpdateOrderItemAction
                 $orderItem->note = $data['note'];
             }
 
+            // Nếu update status (Ví dụ: Bếp báo nấu xong -> ready, Thu ngân báo bưng ra -> served)
+            if (array_key_exists('status', $data)) {
+                $orderItem->status = $data['status'];
+            }
+
             $orderItem->save();
 
-            // Bắn event báo cáo sự thay đổi
-            OrderItemUpdated::dispatch($order, $orderItem);
-
-            return $order->refresh()->load('items.item');
+            return [
+                'order' => $order->refresh()->load('items.item'),
+                'item'  => $orderItem
+            ];
         });
+
+        // Bắn event báo cáo sự thay đổi SAU KHI transaction đã commit
+        OrderItemUpdated::dispatch($result['order'], $result['item']);
+
+        return $result['order'];
     }
 }

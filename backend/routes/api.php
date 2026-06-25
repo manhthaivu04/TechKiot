@@ -7,6 +7,8 @@ use App\Http\Controllers\Admin\RestaurantController;
 use App\Http\Controllers\Admin\SubscriptionController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Api\Tenant\StaffController;
+use App\Http\Controllers\Api\Tenant\TableAreaController;
+use App\Http\Controllers\Api\Tenant\RestaurantTableController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -89,9 +91,19 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('role:OWNER,MANAGER,WAITER,KITCHEN,CASHIER')->prefix('tenant')->name('tenant.')->group(function () {
 
         // Basic Features
-        Route::middleware(['feature:MENU_MANAGEMENT', 'role:OWNER,MANAGER'])->group(function () {
-            Route::apiResource('item-groups', \App\Http\Controllers\Api\Tenant\ItemGroupController::class);
-            Route::apiResource('items', \App\Http\Controllers\Api\Tenant\ItemController::class);
+        // Basic Features
+        Route::middleware(['feature:MENU_MANAGEMENT'])->group(function () {
+            // Mọi nhân viên (Owner, Manager, Waiter, Cashier, Kitchen) đều có thể xem danh sách món ăn và danh mục để tạo đơn/hiển thị POS
+            Route::get('item-groups', [\App\Http\Controllers\Api\Tenant\ItemGroupController::class, 'index']);
+            Route::get('item-groups/{item_group}', [\App\Http\Controllers\Api\Tenant\ItemGroupController::class, 'show']);
+            Route::get('items', [\App\Http\Controllers\Api\Tenant\ItemController::class, 'index']);
+            Route::get('items/{item}', [\App\Http\Controllers\Api\Tenant\ItemController::class, 'show']);
+
+            // Chỉ OWNER, MANAGER mới có quyền thêm/sửa/xoá món ăn và danh mục
+            Route::middleware('role:OWNER,MANAGER')->group(function () {
+                Route::apiResource('item-groups', \App\Http\Controllers\Api\Tenant\ItemGroupController::class)->except(['index', 'show']);
+                Route::apiResource('items', \App\Http\Controllers\Api\Tenant\ItemController::class)->except(['index', 'show']);
+            });
         });
 
         // ── Orders (Basic: POS_QUICK_ORDER + QR_STATIC_ORDER) ─────────────────
@@ -105,12 +117,50 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('orders/{id}/items', [\App\Http\Controllers\Api\Tenant\OrderController::class, 'addItems'])->name('orders.items.store');
             Route::patch('orders/{id}/items/{itemId}', [\App\Http\Controllers\Api\Tenant\OrderController::class, 'updateItem'])->name('orders.items.update');
             Route::delete('orders/{id}/items/{itemId}', [\App\Http\Controllers\Api\Tenant\OrderController::class, 'removeItem'])->name('orders.items.destroy');
-            Route::post('orders/{id}/payments', [\App\Http\Controllers\Api\Tenant\OrderController::class, 'storePayment'])->name('orders.payments.store');
+            // ── Payment routes (tách khỏi OrderController) ─────────────────────────
+            Route::post('orders/{id}/payments', [\App\Http\Controllers\Api\Tenant\PaymentController::class, 'store'])->name('orders.payments.store');
+            Route::get('orders/{id}/payments', [\App\Http\Controllers\Api\Tenant\PaymentController::class, 'index'])->name('orders.payments.index');
         });
 
         // Pro Features
-        Route::middleware('feature:TABLE_MANAGEMENT')->group(function () {
-            // Route::apiResource('tables', TableController::class);
+        // Payment Method Settings (GET cho tất cả nhân viên để hiện phương thức lúc thanh toán)
+        Route::get('payment-method-settings', [\App\Http\Controllers\Api\Tenant\PaymentMethodSettingController::class, 'index'])
+            ->name('payment-method-settings.index');
+
+        // ── Payment Method Settings (Cập nhật: OWNER, MANAGER) ──────────────────────────
+        // Quản lý bật/tắt phương thức thanh toán — không cần feature guard vì
+        // đây là cấu hình cơ bản của mọi nhà hàng.
+        Route::middleware('role:OWNER,MANAGER')->group(function () {
+
+            // ⚠️ Route tĩnh (transfer/qr) PHẢI đứng TRƯỚC route động ({method}/toggle)
+            // để Laravel không nhầm "transfer" là tham số {method}
+            Route::post('payment-method-settings/transfer/qr', [\App\Http\Controllers\Api\Tenant\PaymentMethodSettingController::class, 'uploadQr'])
+                ->name('payment-method-settings.transfer.qr.upload');
+            Route::delete('payment-method-settings/transfer/qr', [\App\Http\Controllers\Api\Tenant\PaymentMethodSettingController::class, 'deleteQr'])
+                ->name('payment-method-settings.transfer.qr.delete');
+
+            Route::patch('payment-method-settings/{method}/toggle', [\App\Http\Controllers\Api\Tenant\PaymentMethodSettingController::class, 'toggle'])
+                ->name('payment-method-settings.toggle');
+            Route::patch('payment-method-settings/{method}', [\App\Http\Controllers\Api\Tenant\PaymentMethodSettingController::class, 'update'])
+                ->name('payment-method-settings.update');
+        });
+
+        // Pro Features — Table Management
+        Route::middleware(['feature:TABLE_MANAGEMENT'])->group(function () {
+            
+            // 1. Nhóm chỉ XEM (Ai cũng vào được: Owner, Manager, Cashier, Waiter, Kitchen)
+            // Lưu ý: Middleware tổng bên ngoài đã có 'role:OWNER,MANAGER,WAITER,KITCHEN,CASHIER'
+            Route::get('table-areas', [\App\Http\Controllers\Api\Tenant\TableAreaController::class, 'index']);
+            Route::get('table-areas/{id}', [\App\Http\Controllers\Api\Tenant\TableAreaController::class, 'show']);
+            
+            Route::get('restaurant-tables', [\App\Http\Controllers\Api\Tenant\RestaurantTableController::class, 'index']);
+            Route::get('restaurant-tables/{id}', [\App\Http\Controllers\Api\Tenant\RestaurantTableController::class, 'show']);
+
+            // 2. Nhóm THAO TÁC tạo/sửa/xóa (Chỉ dành cho Chủ quán và Quản lý)
+            Route::middleware('role:OWNER,MANAGER')->group(function () {
+                Route::apiResource('table-areas', \App\Http\Controllers\Api\Tenant\TableAreaController::class)->except(['index', 'show']);
+                Route::apiResource('restaurant-tables', \App\Http\Controllers\Api\Tenant\RestaurantTableController::class)->except(['index', 'show']);
+            });
         });
 
         Route::middleware(['feature:STAFF_MANAGEMENT', 'role:OWNER,MANAGER'])->group(function () {

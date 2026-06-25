@@ -25,8 +25,8 @@ class GetMenuRequest extends FormRequest
     public function rules(): array
     {
         return [
-            // Token nhúng trong QR: có thể là restaurant_id (QR tĩnh) hoặc table_id (QR bàn Pro)
-            'public_token' => ['required', 'string', 'uuid'],
+            // Token nhúng trong QR: có thể là public_order_token (QR tĩnh) hoặc table_token (QR bàn Pro)
+            'public_token' => ['required', 'string'],
 
             // Loại QR — quyết định Strategy được chọn trong MenuStrategyResolver
             'type'         => ['required', 'string', new Enum(MenuSourceType::class)],

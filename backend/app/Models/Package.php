@@ -19,6 +19,7 @@ class Package extends Model
         'price',
         'duration_days',
         'is_active',
+        'role_limits',
     ];
 
     protected function casts(): array
@@ -27,6 +28,7 @@ class Package extends Model
             'price'        => 'decimal:2',
             'duration_days'=> 'integer',
             'is_active'    => 'boolean',
+            'role_limits'  => 'array',
         ];
     }
 

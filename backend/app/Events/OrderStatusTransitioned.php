@@ -34,9 +34,12 @@ class OrderStatusTransitioned implements ShouldBroadcastNow
         public readonly OrderStatus $to,
     ) {}
 
-    public function broadcastOn(): Channel
+    public function broadcastOn(): array
     {
-        return new Channel("order.{$this->order->id}");
+        return [
+            new Channel("order.{$this->order->id}"),
+            new Channel("restaurant.{$this->order->restaurant_id}.kitchen")
+        ];
     }
 
     public function broadcastAs(): string

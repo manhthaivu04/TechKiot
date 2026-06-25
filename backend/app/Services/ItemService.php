@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Contracts\Repositories\ItemRepositoryInterface;
 use App\Contracts\Repositories\ItemGroupRepositoryInterface;
 use App\Contracts\Services\ItemServiceInterface;
+use App\Services\Items\ItemFactory;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Exception;
@@ -28,23 +29,11 @@ class ItemService implements ItemServiceInterface
 
     public function createItem(string $restaurantId, array $data, ?UploadedFile $image = null)
     {
-        // 1. Kiểm tra item_group_id phải thuộc về cùng restaurant_id
-        if (isset($data['item_group_id'])) {
-            $this->itemGroupRepository->findByIdAndRestaurantId($data['item_group_id'], $restaurantId);
-        }
+        // Uỷ quyền việc tạo cho Creator tương ứng với item_type.
+        // Thêm loại item mới → chỉ cần thêm case vào ItemFactory, không sửa Service này.
+        $creator = ItemFactory::make($data['item_type']);
 
-        $data['restaurant_id'] = $restaurantId;
-
-        // 2. Xử lý Upload ảnh lên Cloudinary
-        if ($image) {
-            $uploadedFileUrl = cloudinary()->uploadApi()->upload($image->getRealPath(), [
-                'folder' => "kiottay/{$restaurantId}/items"
-            ])['secure_url'];
-            
-            $data['image_url'] = $uploadedFileUrl;
-        }
-
-        return $this->itemRepository->create($data);
+        return $creator->create($restaurantId, $data, $image);
     }
 
     public function updateItem(string $id, string $restaurantId, array $data, ?UploadedFile $image = null)

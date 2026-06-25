@@ -68,9 +68,41 @@ abstract class OrderState
 
         $this->order->update(['status' => $newStatus]);
         
+        // Cập nhật trạng thái các món ăn (Cascade Status)
+        $this->syncOrderItemStatuses($newStatus);
+        
         Log::info("Order [{$this->order->order_code}] transitioned: {$this->getValue()->value} → {$newStatus->value}");
         
         // Cập nhật lại context state của model (nếu gọi tiếp $order->state())
         $this->order->refresh();
+    }
+
+    /**
+     * Đồng bộ trạng thái của từng OrderItem dựa theo trạng thái của Order.
+     */
+    protected function syncOrderItemStatuses(OrderStatus $newStatus): void
+    {
+        switch ($newStatus) {
+            case OrderStatus::Cooking:
+                // Đơn hàng chuyển sang Đang nấu -> Các món Pending thành Cooking
+                $this->order->items()->where('status', \App\Enums\OrderItemStatus::Pending->value)
+                    ->update(['status' => \App\Enums\OrderItemStatus::Cooking->value]);
+                break;
+                
+            case OrderStatus::Served:
+                // Đơn hàng chuyển sang Đã phục vụ -> Các món chưa phục vụ thành Served
+                $this->order->items()->whereIn('status', [
+                    \App\Enums\OrderItemStatus::Pending->value,
+                    \App\Enums\OrderItemStatus::Cooking->value,
+                    \App\Enums\OrderItemStatus::Ready->value,
+                ])->update(['status' => \App\Enums\OrderItemStatus::Served->value]);
+                break;
+                
+            case OrderStatus::Cancelled:
+                // Đơn hàng bị Hủy -> Các món chưa được Served cũng bị Hủy
+                $this->order->items()->where('status', '!=', \App\Enums\OrderItemStatus::Served->value)
+                    ->update(['status' => \App\Enums\OrderItemStatus::Cancelled->value]);
+                break;
+        }
     }
 }

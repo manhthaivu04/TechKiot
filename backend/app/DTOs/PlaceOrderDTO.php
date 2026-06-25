@@ -39,6 +39,7 @@ final readonly class PlaceOrderDTO
         public array              $items,
 
         // ── Pro fields (Basic để null, Pro truyền giá trị) ──────────────────
+        public ?string            $serviceType      = null,
         public ?string            $tableId          = null, // Pro: TABLE_MANAGEMENT
         public ?string            $note             = null,
         public ?string            $customerName     = null,
@@ -65,6 +66,7 @@ final readonly class PlaceOrderDTO
                                     fn(array $item) => PlaceOrderItemDTO::fromArray($item),
                                     $data['items']
                                 ),
+            serviceType:        isset($data['service_type']) ? strtolower($data['service_type']) : null,
             tableId:            $data['table_id']           ?? null,
             note:               $data['note']               ?? null,
             customerName:       $data['customer_name']      ?? null,

@@ -5,41 +5,30 @@ namespace App\Services\Orders\Strategies;
 use App\Contracts\Orders\OrderSourceStrategy;
 use App\DTOs\PlaceOrderDTO;
 use App\Models\Order;
+use App\Models\RestaurantTable;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Strategy cho kênh QR Table — Feature: QR_TABLE_ORDER (Gói Pro).
+ * Strategy cho kênh QR bàn — Feature: TABLE_MANAGEMENT (Gói Pro).
  *
- * ╔══════════════════════════════════════════════════════╗
- * ║  PRO MODULE — Chưa implement, chỉ là skeleton       ║
- * ║  Tạo sẵn để chứng minh việc "cắm thêm" dễ thế nào  ║
- * ╚══════════════════════════════════════════════════════╝
- *
- * Khi gói Pro được bật:
- * 1. Uncomment case QrTable trong OrderStrategyResolver.
- * 2. Implement logic bên dưới.
- * 3. Không cần chạm vào OrderService hay OrderSourceStrategy interface.
- *
- * Khác với QrStatic: QrTable biết chính xác bàn nào ($dto->tableId),
- * nên có thể cập nhật trạng thái bàn (occupied) và gắn đơn vào bàn.
+ * Khác với QrStaticOrderStrategy:
+ * - Biết chính xác bàn nào (thông qua table_id trong DTO).
+ * - Gán table_id vào Order sau khi tạo (đảm bảo phòng race condition: gắn sau khi đơn đã insert).
+ * - Broadcast thông báo cho Thu ngân KÈM thông tin bàn.
  */
 class QrTableOrderStrategy implements OrderSourceStrategy
 {
     public function handle(Order $order, PlaceOrderDTO $dto): void
     {
-        Log::info("Order [{$order->order_code}] created via QR Table channel.", [
-            'table_id' => $dto->tableId,
-        ]);
+        // 1. Gán table_id vào Order (đảm bảo gắn sau khi insert thành công)
+        if ($dto->tableId) {
+            $order->update(['table_id' => $dto->tableId]);
 
-        // TODO (Pro): Cập nhật trạng thái bàn sang 'occupied'
-        // $table = Table::findOrFail($dto->tableId);
-        // $table->update(['status' => TableStatus::Occupied]);
+            Log::info("Order [{$order->order_code}] gắn vào bàn [{$dto->tableId}].");
+        }
 
-        // TODO (Pro): Gắn order vào session bàn hiện tại
-        // $tableSession = TableSession::findOrCreateFor($dto->tableId);
-        // $tableSession->orders()->attach($order->id);
-
-        // TODO (Pro): Notify màn hình nhân viên phục vụ bàn đó
-        // event(new NewTableOrderReceived($order, $table));
+        // 2. Broadcast báo Thu ngân có đơn QR mới từ bàn
+        broadcast(new \App\Events\Broadcasts\CashierNewQrOrderBroadcast($order->refresh()));
+        Log::info("Đã gửi Broadcast NewQrOrder (QrTable) cho Thu ngân: restaurant.{$order->restaurant_id}.cashier");
     }
 }

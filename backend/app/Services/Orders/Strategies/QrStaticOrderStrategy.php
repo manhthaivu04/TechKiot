@@ -25,8 +25,9 @@ class QrStaticOrderStrategy implements OrderSourceStrategy
             'customer_name'      => $dto->customerName,
         ]);
 
-        // TODO: Broadcast event để nhân viên nhận thông báo real-time
-        // event(new NewQrOrderReceived($order));
+        // Broadcast event để nhân viên THU NGÂN nhận thông báo real-time
+        broadcast(new \App\Events\Broadcasts\CashierNewQrOrderBroadcast($order));
+        Log::info("Đã gửi Broadcast NewQrOrder cho Thu ngân: restaurant.{$order->restaurant_id}.cashier");
 
         // TODO: Gửi SMS/Zalo OA xác nhận đơn cho khách (nếu có số điện thoại)
         // if ($dto->customerPhone) {

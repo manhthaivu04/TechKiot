@@ -7,9 +7,7 @@ use App\DTOs\PlaceOrderDTO;
 use App\Enums\OrderStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Order\PlaceOrderRequest;
-use App\Http\Requests\Order\RecordPaymentRequest;
 use App\Http\Resources\OrderResource;
-use App\Http\Resources\PaymentResource;
 use App\Models\Order;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
@@ -67,9 +65,22 @@ class OrderController extends Controller
 
         $orders = Order::query()
             ->where('restaurant_id', $user->restaurant_id)
+            ->when(request('status'), function ($q, $status) {
+                $q->where('status', $status);
+            })
+            ->when(request('service_type'), function ($q, $type) {
+                $q->where('service_type', $type);
+            })
+            ->when(request('search'), function ($q, $search) {
+                $q->where(function ($q2) use ($search) {
+                    $q2->where('order_code', 'LIKE', "%{$search}%")
+                       ->orWhere('customer_name', 'LIKE', "%{$search}%")
+                       ->orWhere('customer_phone', 'LIKE', "%{$search}%");
+                });
+            })
             ->with(['items.item', 'payments'])
             ->latest()
-            ->paginate(20);
+            ->paginate(50); // Increased pagination slightly for kanban view
 
         return $this->successResponse([
             'items' => OrderResource::collection($orders->items()),
@@ -121,36 +132,6 @@ class OrderController extends Controller
             data:    new OrderResource($order),
             message: "Đơn hàng đã chuyển sang trạng thái [{$order->state()->label()}].",
             code:    \App\Enums\ApiCode::SUCCESS
-        );
-    }
-
-    /**
-     * POST /api/tenant/orders/{id}/payments
-     */
-    public function storePayment(RecordPaymentRequest $request, string $id): JsonResponse
-    {
-        /** @var \App\Models\User $user */
-        $user = Auth::user();
-
-        $order = Order::query()
-            ->where('restaurant_id', $user->restaurant_id)
-            ->findOrFail($id);
-
-        $validated = $request->validated();
-
-        $payment = $this->orderService->recordPayment(
-            order:       $order,
-            amount:      isset($validated['amount']) ? (float) $validated['amount'] : null,
-            method:      $validated['payment_method'],
-            createdBy:   $user->id,
-            referenceNo: $validated['reference_no'] ?? null,
-        );
-
-        return $this->successResponse(
-            data:    new PaymentResource($payment),
-            message: 'Ghi nhận thanh toán thành công.',
-            code:    \App\Enums\ApiCode::CREATED,
-            httpStatus: 201
         );
     }
 

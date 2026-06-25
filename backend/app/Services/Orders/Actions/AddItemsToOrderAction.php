@@ -38,7 +38,7 @@ class AddItemsToOrderAction
      */
     public function execute(Order $order, array $newItems): Order
     {
-        return DB::transaction(function () use ($order, $newItems): Order {
+        $order = DB::transaction(function () use ($order, $newItems): Order {
             $dto = new AddItemsDTO($order, $newItems);
 
             // Chạy qua Pipeline
@@ -47,11 +47,28 @@ class AddItemsToOrderAction
                 ->through($this->pipes)
                 ->thenReturn();
 
-            // Fire Event để báo Bếp / trigger Strategy
-            OrderItemsAdded::dispatch($order, $newItems);
+            $order = $order->refresh();
 
-            return $order->refresh()->load('items.item');
+            // Nếu đơn hàng đã phục vụ (Served), thì khi gọi thêm món phải kéo nó về lại Đang nấu (Cooking)
+            // để nhân viên bếp/thu ngân thấy đơn hàng đỏ lên và tiến hành nấu & phục vụ.
+            if ($order->status === \App\Enums\OrderStatus::Served) {
+                $order->update(['status' => \App\Enums\OrderStatus::Cooking]);
+                
+                // Fire sự kiện để Cập nhật UI ngay lập tức
+                \App\Events\OrderStatusTransitioned::dispatch(
+                    $order,
+                    \App\Enums\OrderStatus::Served,
+                    \App\Enums\OrderStatus::Cooking
+                );
+            }
+
+            return $order->load('items.item');
         });
+
+        // Fire Event SAU KHI transaction đã commit
+        OrderItemsAdded::dispatch($order, $newItems);
+
+        return $order;
     }
 }
 

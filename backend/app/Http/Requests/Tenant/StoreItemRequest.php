@@ -12,6 +12,12 @@ class StoreItemRequest extends FormRequest
 {
     public function authorize(): bool
     {
+        // Tạo nguyên liệu (INGREDIENT) yêu cầu gói có tính năng INVENTORY_MANAGEMENT.
+        // Nếu nhà hàng chưa mua gói Premium, trả về 403 Forbidden ngay tại đây.
+        if ($this->input('item_type') === ItemType::INGREDIENT->value) {
+            return $this->user()->restaurant->hasFeature('INVENTORY_MANAGEMENT');
+        }
+
         return true;
     }
 
@@ -21,7 +27,8 @@ class StoreItemRequest extends FormRequest
 
         return [
             'item_group_id' => [
-                'required',
+                Rule::requiredIf(fn () => $this->input('item_type') !== ItemType::INGREDIENT->value),
+                'nullable',
                 'uuid',
                 Rule::exists('item_groups', 'id')->where('restaurant_id', $restaurantId)
             ],
@@ -31,7 +38,12 @@ class StoreItemRequest extends FormRequest
             'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
             'description' => 'nullable|string',
             'cost_price' => 'nullable|numeric|min:0',
-            'sale_price' => 'required|numeric|min:0',
+            'sale_price' => [
+                Rule::requiredIf(fn () => $this->input('item_type') !== ItemType::INGREDIENT->value),
+                'nullable',
+                'numeric',
+                'min:0'
+            ],
             'is_active' => 'sometimes|boolean',
             'availability_status' => ['required', new Enum(ItemAvailabilityStatus::class)],
         ];

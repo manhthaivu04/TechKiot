@@ -34,6 +34,15 @@ class AuthController extends Controller
             ]);
         }
 
+        // Chặn đăng nhập nếu là nhân viên nhưng nhà hàng không có tính năng STAFF_MANAGEMENT
+        if (! $user->hasAnyRole(\App\Enums\UserRole::SUPER_ADMIN, \App\Enums\UserRole::OWNER)) {
+            if (! $user->restaurant || ! $user->restaurant->hasFeature('STAFF_MANAGEMENT')) {
+                throw ValidationException::withMessages([
+                    'email' => ['Nhà hàng của bạn chưa đăng ký tính năng Quản lý Nhân viên. Vui lòng liên hệ Chủ quán.'],
+                ]);
+            }
+        }
+
         // Update last login timestamp
         $user->update(['last_login_at' => now()]);
 

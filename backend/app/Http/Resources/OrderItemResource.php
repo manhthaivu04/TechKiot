@@ -21,6 +21,7 @@ class OrderItemResource extends JsonResource
             'line_total' => (float) $this->line_total,
             'status'     => $this->status->value,
             'note'       => $this->note,
+            'created_at' => $this->created_at,
         ];
     }
 }
