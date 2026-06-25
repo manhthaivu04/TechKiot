@@ -44,14 +44,17 @@ class PublicPlaceOrderRequest extends FormRequest
     public function rules(): array
     {
         return [
-            // Token nhúng trong QR code — Controller dùng để resolve restaurant_id
+            // Token nhúng trong QR code
+            // - QR tĩnh:  public_token = public_order_token của nhà hàng
+            // - QR bàn:   public_token = qr_token của bàn
             'public_token' => ['required', 'string'],
 
-            // Chỉ cho phép QR tĩnh — QR bàn (qr_table) chưa hỗ trợ, cashier là kênh nội bộ
+            // Cho phép cả qr_static lẫn qr_table
             'source_channel' => [
                 'required',
                 Rule::in([
                     OrderSourceChannel::QrStatic->value,
+                    OrderSourceChannel::QrTable->value,
                 ]),
             ],
 

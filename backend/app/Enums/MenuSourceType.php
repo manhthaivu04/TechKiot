@@ -21,6 +21,6 @@ enum MenuSourceType: string
     // Basic: QR tĩnh đính kèm restaurant_id
     case QrStatic = 'qr_static';
 
-    // Pro: QR động đính kèm table_id (chưa implement)
-    // case QrTable = 'qr_table';
+    // Pro: QR động đính kèm table_id
+    case QrTable = 'qr_table';
 }

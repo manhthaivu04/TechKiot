@@ -54,6 +54,15 @@ class QrStaticMenuStrategy implements MenuSourceStrategy
         $items = $this->itemRepository->getActiveMenuByRestaurantId($restaurant->id);
 
         // 3. Gom nhóm theo danh mục và trả về
-        return $this->menuGrouper->group($items);
+        return [
+            'restaurant' => [
+                'id'         => $restaurant->id,
+                'name'       => $restaurant->name,
+                'address'    => $restaurant->address,
+                'phone'      => $restaurant->phone,
+                'banner_url' => $restaurant->banner_url,
+            ],
+            'item_groups' => $this->menuGrouper->group($items),
+        ];
     }
 }

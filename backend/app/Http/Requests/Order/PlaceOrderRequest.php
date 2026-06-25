@@ -55,4 +55,16 @@ class PlaceOrderRequest extends FormRequest
             'items.*.quantity.min'    => 'Số lượng tối thiểu là 1.',
         ];
     }
+
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            if ($this->filled('table_id')) {
+                $restaurant = \App\Models\Restaurant::find($this->user()->restaurant_id);
+                if ($restaurant && ! $restaurant->hasFeature('TABLE_MANAGEMENT')) {
+                    $validator->errors()->add('table_id', 'Nhà hàng của bạn chưa đăng ký tính năng Quản lý bàn.');
+                }
+            }
+        });
+    }
 }

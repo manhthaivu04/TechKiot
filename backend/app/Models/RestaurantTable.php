@@ -43,4 +43,9 @@ class RestaurantTable extends Model
     {
         return $this->belongsTo(TableArea::class, 'area_id');
     }
+
+    public function orders(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Order::class, 'table_id');
+    }
 }

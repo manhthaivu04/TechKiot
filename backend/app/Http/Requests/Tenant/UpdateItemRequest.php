@@ -12,6 +12,12 @@ class UpdateItemRequest extends FormRequest
 {
     public function authorize(): bool
     {
+        // Đổi item_type sang INGREDIENT yêu cầu gói có tính năng INVENTORY_MANAGEMENT.
+        // Ngăn không cho gói Basic "lén" chuyển món ăn thành nguyên liệu.
+        if ($this->input('item_type') === ItemType::INGREDIENT->value) {
+            return $this->user()->restaurant->hasFeature('INVENTORY_MANAGEMENT');
+        }
+
         return true;
     }
 
@@ -22,6 +28,7 @@ class UpdateItemRequest extends FormRequest
         return [
             'item_group_id' => [
                 'sometimes',
+                'nullable',
                 'uuid',
                 Rule::exists('item_groups', 'id')->where('restaurant_id', $restaurantId)
             ],
@@ -31,7 +38,7 @@ class UpdateItemRequest extends FormRequest
             'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
             'description' => 'nullable|string',
             'cost_price' => 'nullable|numeric|min:0',
-            'sale_price' => 'sometimes|numeric|min:0',
+            'sale_price' => 'sometimes|nullable|numeric|min:0',
             'is_active' => 'sometimes|boolean',
             'availability_status' => ['sometimes', new Enum(ItemAvailabilityStatus::class)],
         ];
