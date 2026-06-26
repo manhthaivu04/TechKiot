@@ -56,6 +56,9 @@ use App\Services\Menu\Strategies\QrStaticMenuStrategy;
 use App\Contracts\Services\PaymentServiceInterface;
 use App\Services\PaymentService;
 use App\Services\Payments\ProcessPaymentAction;
+// ── Analytics Module ───────────────────────────────────────────────
+use App\Contracts\Services\AnalyticsServiceInterface;
+use App\Services\AnalyticsService;
 use Illuminate\Support\ServiceProvider;
 
 /**
@@ -94,6 +97,7 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(TableAreaServiceInterface::class, TableAreaService::class);
         $this->app->bind(RestaurantTableServiceInterface::class, RestaurantTableService::class);
         $this->app->bind(PaymentServiceInterface::class, PaymentService::class);
+        $this->app->bind(AnalyticsServiceInterface::class, AnalyticsService::class);
 
         // ── Order Action Classes ────────────────────────────────────────────
         // Stateless — an toàn dùng singleton để tái sử dụng qua nhiều requests.

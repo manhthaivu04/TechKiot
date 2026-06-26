@@ -66,6 +66,8 @@ abstract class OrderState
             );
         }
 
+        $oldStatus = $this->getValue();
+
         $this->order->update(['status' => $newStatus]);
         
         // Cập nhật trạng thái các món ăn (Cascade Status)
@@ -75,7 +77,15 @@ abstract class OrderState
         
         // Cập nhật lại context state của model (nếu gọi tiếp $order->state())
         $this->order->refresh();
+
+        // Broadcast trạng thái mới cho tất cả kênh liên quan:
+        // - order.{id}          → màn hình theo dõi của khách
+        // - restaurant.{id}.kitchen → màn hình KDS của bếp
+        // Dispatch tại đây đảm bảo MỌI nơi gọi transitionTo() (kể cả
+        // khi thanh toán tự động chuyển sang Paid) đều phát sự kiện.
+        \App\Events\OrderStatusTransitioned::dispatch($this->order, $oldStatus, $newStatus);
     }
+
 
     /**
      * Đồng bộ trạng thái của từng OrderItem dựa theo trạng thái của Order.
