@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\PackageController;
 use App\Http\Controllers\Admin\RestaurantController;
 use App\Http\Controllers\Admin\SubscriptionController;
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\Api\Tenant\AnalyticsController;
 use App\Http\Controllers\Api\Tenant\StaffController;
 use App\Http\Controllers\Api\Tenant\TableAreaController;
 use App\Http\Controllers\Api\Tenant\RestaurantTableController;
@@ -169,6 +170,14 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::middleware(['feature:STAFF_MANAGEMENT', 'role:OWNER,MANAGER'])->group(function () {
             Route::apiResource('staff', StaffController::class);
+        });
+
+        // ── Analytics Dashboard (OWNER, MANAGER only) ────────────────────────
+        Route::middleware('role:OWNER,MANAGER')->group(function () {
+            Route::get('analytics/dashboard', [AnalyticsController::class, 'dashboard'])
+                ->name('analytics.dashboard');
+            Route::get('analytics/transactions', [AnalyticsController::class, 'transactions'])
+                ->name('analytics.transactions');
         });
 
         // Premium Features
