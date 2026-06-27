@@ -40,7 +40,7 @@ class ItemController extends Controller
     {
         $restaurantId = $request->user()->restaurant_id;
         $item = $this->itemService->getItemById($id, $restaurantId);
-        $item->load('itemGroup');
+        $item->load(['itemGroup', 'ingredients']);
         
         return response()->json(['data' => $item]);
     }

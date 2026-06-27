@@ -103,6 +103,10 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::middleware('role:OWNER,MANAGER')->group(function () {
                 Route::apiResource('item-groups', \App\Http\Controllers\Api\Tenant\ItemGroupController::class)->except(['index', 'show']);
                 Route::apiResource('items', \App\Http\Controllers\Api\Tenant\ItemController::class)->except(['index', 'show']);
+                
+                // BOM Endpoints
+                Route::get('items/{item}/ingredients', [\App\Http\Controllers\Api\Tenant\ItemRecipeController::class, 'show']);
+                Route::post('items/{item}/recipe', [\App\Http\Controllers\Api\Tenant\ItemRecipeController::class, 'sync']);
             });
         });
 
@@ -169,6 +173,27 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // Premium Features
         Route::middleware('feature:INVENTORY_MANAGEMENT')->group(function () {
+            Route::middleware('role:OWNER,MANAGER')->group(function () {
+                Route::apiResource('warehouses', \App\Http\Controllers\Api\Tenant\WarehouseController::class)
+                    ->only(['index', 'store', 'update', 'destroy']);
+
+                // ── Stock Documents (Chứng từ kho) ─────────────────────────────
+                // Không dùng apiResource vì confirm/cancel là custom actions.
+                Route::get('stock-documents', [\App\Http\Controllers\Api\Tenant\StockDocumentController::class, 'index'])
+                    ->name('stock-documents.index');
+                Route::post('stock-documents', [\App\Http\Controllers\Api\Tenant\StockDocumentController::class, 'store'])
+                    ->name('stock-documents.store');
+                Route::patch('stock-documents/{id}/confirm', [\App\Http\Controllers\Api\Tenant\StockDocumentController::class, 'confirm'])
+                    ->name('stock-documents.confirm');
+                Route::patch('stock-documents/{id}/cancel', [\App\Http\Controllers\Api\Tenant\StockDocumentController::class, 'cancel'])
+                    ->name('stock-documents.cancel');
+
+                // ── Inventory Dashboard (Tồn kho & Lịch sử) ───────────────────
+                Route::get('inventory', [\App\Http\Controllers\Api\Tenant\InventoryController::class, 'index'])
+                    ->name('inventory.index');
+                Route::get('inventory-transactions', [\App\Http\Controllers\Api\Tenant\InventoryController::class, 'transactions'])
+                    ->name('inventory-transactions.index');
+            });
         });
     });
 });

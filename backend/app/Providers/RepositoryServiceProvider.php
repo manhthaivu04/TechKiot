@@ -27,21 +27,37 @@ use App\Services\StaffService;
 use App\Contracts\Repositories\ItemGroupRepositoryInterface;
 use App\Contracts\Repositories\ItemRepositoryInterface;
 use App\Contracts\Repositories\TableAreaRepositoryInterface;
+use App\Contracts\Repositories\RecipeRepositoryInterface;
 use App\Contracts\Repositories\RestaurantTableRepositoryInterface;
+use App\Contracts\Repositories\WarehouseRepositoryInterface;
+use App\Contracts\Repositories\InventoryRepositoryInterface;
+use App\Contracts\Repositories\InventoryTransactionRepositoryInterface;
+use App\Contracts\Repositories\StockDocumentRepositoryInterface;
 use App\Contracts\Services\ItemGroupServiceInterface;
 use App\Contracts\Services\ItemServiceInterface;
 use App\Contracts\Services\OrderServiceInterface;
 use App\Contracts\Services\TableAreaServiceInterface;
 use App\Contracts\Services\RestaurantTableServiceInterface;
+use App\Contracts\Services\WarehouseServiceInterface;
+use App\Contracts\Services\InventoryServiceInterface;
+use App\Contracts\Services\StockDocumentServiceInterface;
 use App\Repositories\Eloquent\ItemGroupRepository;
 use App\Repositories\Eloquent\ItemRepository;
 use App\Repositories\Eloquent\TableAreaRepository;
+use App\Repositories\Eloquent\RecipeRepository;
 use App\Repositories\Eloquent\RestaurantTableRepository;
+use App\Repositories\Eloquent\WarehouseRepository;
+use App\Repositories\Eloquent\InventoryRepository;
+use App\Repositories\Eloquent\InventoryTransactionRepository;
+use App\Repositories\Eloquent\StockDocumentRepository;
 use App\Services\ItemGroupService;
 use App\Services\ItemService;
 use App\Services\OrderService;
 use App\Services\TableAreaService;
 use App\Services\RestaurantTableService;
+use App\Services\WarehouseService;
+use App\Services\InventoryService;
+use App\Services\StockDocumentService;
 use App\Services\Orders\Actions\AddItemsToOrderAction;
 use App\Services\Orders\Actions\PlaceOrderAction;
 use App\Services\Orders\Actions\RecordPaymentAction;
@@ -80,6 +96,11 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(ItemRepositoryInterface::class, ItemRepository::class);
         $this->app->bind(TableAreaRepositoryInterface::class, TableAreaRepository::class);
         $this->app->bind(RestaurantTableRepositoryInterface::class, RestaurantTableRepository::class);
+        $this->app->bind(RecipeRepositoryInterface::class, RecipeRepository::class);
+        $this->app->bind(WarehouseRepositoryInterface::class, WarehouseRepository::class);
+        $this->app->bind(InventoryRepositoryInterface::class, InventoryRepository::class);
+        $this->app->bind(InventoryTransactionRepositoryInterface::class, InventoryTransactionRepository::class);
+        $this->app->bind(StockDocumentRepositoryInterface::class, StockDocumentRepository::class);
 
         // ── Services ───────────────────────────────────────────────────────────
         $this->app->bind(RestaurantServiceInterface::class, RestaurantService::class);
@@ -94,6 +115,9 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(TableAreaServiceInterface::class, TableAreaService::class);
         $this->app->bind(RestaurantTableServiceInterface::class, RestaurantTableService::class);
         $this->app->bind(PaymentServiceInterface::class, PaymentService::class);
+        $this->app->bind(WarehouseServiceInterface::class, WarehouseService::class);
+        $this->app->bind(InventoryServiceInterface::class, InventoryService::class);
+        $this->app->bind(StockDocumentServiceInterface::class, StockDocumentService::class);
 
         // ── Order Action Classes ────────────────────────────────────────────
         // Stateless — an toàn dùng singleton để tái sử dụng qua nhiều requests.
