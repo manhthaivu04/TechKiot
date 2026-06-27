@@ -23,6 +23,9 @@ class UpdateOrderItemAction
 
         $result = DB::transaction(function () use ($order, $itemId, $data) {
             $orderItem = $order->items()->findOrFail($itemId);
+            
+            $oldQuantity = clone $orderItem;
+            $oldQuantityVal = $oldQuantity->quantity;
 
             // Nếu update quantity, cần tính lại tiền
             if (isset($data['quantity']) && $data['quantity'] !== $orderItem->quantity) {
@@ -52,12 +55,13 @@ class UpdateOrderItemAction
 
             return [
                 'order' => $order->refresh()->load('items.item'),
-                'item'  => $orderItem
+                'item'  => $orderItem,
+                'oldQuantity' => $oldQuantityVal
             ];
         });
 
         // Bắn event báo cáo sự thay đổi SAU KHI transaction đã commit
-        OrderItemUpdated::dispatch($result['order'], $result['item']);
+        OrderItemUpdated::dispatch($result['order'], $result['item'], $result['oldQuantity']);
 
         return $result['order'];
     }

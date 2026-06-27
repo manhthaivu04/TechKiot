@@ -18,10 +18,12 @@ class OrderItemUpdated implements ShouldBroadcastNow
     /**
      * @param Order $order
      * @param OrderItem $orderItem Dữ liệu của OrderItem vừa được cập nhật
+     * @param int|null $oldQuantity Số lượng cũ trước khi cập nhật (để xử lý bù trừ tồn kho)
      */
     public function __construct(
         public Order $order,
         public OrderItem $orderItem,
+        public readonly ?int $oldQuantity = null,
     ) {}
 
     public function broadcastOn(): Channel

@@ -59,6 +59,7 @@ class ItemRepository extends BaseEloquentRepository implements ItemRepositoryInt
         return $this->model
             ->where('restaurant_id', $restaurantId)
             ->where('is_active', true)
+            ->where('item_type', \App\Enums\ItemType::MENU_ITEM)
             ->where('availability_status', ItemAvailabilityStatus::IN_STOCK)
             ->with([
                 'itemGroup' => fn ($q) => $q->where('is_active', true)

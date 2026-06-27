@@ -109,8 +109,7 @@ class CalculatePricingPipe implements OrderPipeInterface
     {
         $today    = now()->format('Ymd');
         $count    = Order::query()
-            ->where('restaurant_id', $restaurantId)
-            ->whereDate('created_at', now()->toDateString())
+            ->where('order_code', 'like', "KT-{$today}-%")
             ->count();
         $sequence = str_pad((string) ($count + 1), 4, '0', STR_PAD_LEFT);
         return "KT-{$today}-{$sequence}";
