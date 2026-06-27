@@ -96,6 +96,11 @@ class Restaurant extends Model
         return $this->hasMany(RestaurantPaymentMethod::class);
     }
 
+    public function warehouses(): HasMany
+    {
+        return $this->hasMany(Warehouse::class);
+    }
+
     /**
      * Kiểm tra một phương thức thanh toán có đang được bật không.
      * Trả về true nếu chưa có config (mặc định cho phép).
