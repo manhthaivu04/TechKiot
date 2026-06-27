@@ -19,6 +19,7 @@ class PackageResource extends JsonResource
             'duration_days' => $this->duration_days,
             'is_active'     => $this->is_active,
             'features'      => FeatureResource::collection($this->whenLoaded('features')),
+            'prices'        => PackagePriceResource::collection($this->whenLoaded('prices')),
             'created_at'    => $this->created_at?->toIso8601String(),
             'updated_at'    => $this->updated_at?->toIso8601String(),
         ];

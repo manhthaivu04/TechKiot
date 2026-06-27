@@ -20,7 +20,7 @@ class FeatureRepository extends BaseEloquentRepository implements FeatureReposit
     public function paginate(array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
         return $this->model->newQuery()
-            ->when(isset($filters['is_active']), fn ($q) => $q->where('is_active', $filters['is_active']))
+            ->when(isset($filters['is_active']), fn ($q) => $q->where('is_active', filter_var($filters['is_active'], FILTER_VALIDATE_BOOLEAN)))
             ->when(
                 isset($filters['search']),
                 fn ($q) => $q->where(function ($q) use ($filters) {

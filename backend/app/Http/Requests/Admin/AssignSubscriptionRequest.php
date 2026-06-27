@@ -14,7 +14,8 @@ class AssignSubscriptionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'package_id' => ['required', 'uuid', 'exists:packages,id'],
+            'package_id'       => ['required', 'uuid', 'exists:packages,id'],
+            'package_price_id' => ['nullable', 'uuid', 'exists:package_prices,id'],
         ];
     }
 }
