@@ -1,5 +1,11 @@
 #!/bin/sh
 
+# Clear any cached configuration or routes to prevent stale env values
+echo "==> Clearing application cache..."
+php artisan config:clear
+php artisan route:clear
+php artisan cache:clear
+
 # Tự động chạy database migration khi container khởi động
 echo "==> Running database migrations..."
 php artisan migrate --force
