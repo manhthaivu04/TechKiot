@@ -5,6 +5,8 @@ namespace App\Services;
 use App\Contracts\Repositories\ItemRepositoryInterface;
 use App\Contracts\Repositories\ItemGroupRepositoryInterface;
 use App\Contracts\Services\ItemServiceInterface;
+use App\Enums\ItemType;
+use App\Events\IngredientCostPriceUpdated;
 use App\Services\Items\ItemFactory;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -58,7 +60,20 @@ class ItemService implements ItemServiceInterface
             $data['image_url'] = $uploadedFileUrl;
         }
 
-        return $this->itemRepository->update($item, $data);
+        $oldCostPrice = $item->item_type === ItemType::INGREDIENT
+            ? (float) $item->cost_price
+            : null;
+
+        $updatedItem = $this->itemRepository->update($item, $data);
+
+        if ($updatedItem->item_type === ItemType::INGREDIENT
+            && array_key_exists('cost_price', $data)
+            && round((float) $updatedItem->cost_price, 2) !== round($oldCostPrice, 2)
+        ) {
+            IngredientCostPriceUpdated::dispatch($updatedItem);
+        }
+
+        return $updatedItem;
     }
 
     public function deleteItem(string $id, string $restaurantId)

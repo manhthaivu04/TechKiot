@@ -16,19 +16,22 @@ use App\Enums\MenuSourceType;
  * - Strategy nhận DTO đã type-safe, không parse raw array.
  * - `readonly` ngăn mutation vô tình khi truyền qua các tầng.
  *
- * Hai luồng QR:
+ * Ba luồng lấy menu:
  *   1. QR tĩnh  (Basic): public_token = restaurant_id, type = qr_static.
  *   2. QR bàn   (Pro)  : public_token = table_id,      type = qr_table.
+ *   3. Tenant POS      : restaurantId từ auth,         type = tenant_pos.
  */
 final readonly class GetMenuDTO
 {
     /**
-     * @param string         $publicToken  Giá trị từ QR (restaurant_id hoặc table_id tùy type)
-     * @param MenuSourceType $type         Loại QR — quyết định Strategy nào được chọn
+     * @param MenuSourceType $type          Loại nguồn — quyết định Strategy
+     * @param string|null    $publicToken   Token từ QR (qr_static | qr_table)
+     * @param string|null    $restaurantId  UUID nhà hàng (tenant_pos)
      */
     public function __construct(
-        public string         $publicToken,
         public MenuSourceType $type,
+        public ?string        $publicToken = null,
+        public ?string        $restaurantId = null,
     ) {}
 
     /**
@@ -40,8 +43,16 @@ final readonly class GetMenuDTO
     public static function fromArray(array $data): self
     {
         return new self(
-            publicToken: $data['public_token'],
-            type:        MenuSourceType::from($data['type']),
+            type:         MenuSourceType::from($data['type']),
+            publicToken:  $data['public_token'],
+        );
+    }
+
+    public static function forTenant(string $restaurantId): self
+    {
+        return new self(
+            type:         MenuSourceType::TenantPos,
+            restaurantId: $restaurantId,
         );
     }
 }

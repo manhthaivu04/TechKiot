@@ -4,7 +4,9 @@ namespace App\Repositories\Eloquent;
 
 use App\Contracts\Repositories\RecipeRepositoryInterface;
 use App\Events\RecipeUpdated;
+use App\Enums\ItemType;
 use App\Models\Item;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Eloquent implementation cho RecipeRepositoryInterface.
@@ -26,6 +28,25 @@ class RecipeRepository implements RecipeRepositoryInterface
     public function syncIngredients(string $productId, array $ingredientsData): Item
     {
         $menuItem = $this->model->newQuery()->findOrFail($productId);
+
+        if ($menuItem->item_type !== ItemType::MENU_ITEM) {
+            throw ValidationException::withMessages([
+                'product_id' => ['Chỉ món ăn (MENU_ITEM) mới có thể gán công thức.'],
+            ]);
+        }
+
+        foreach ($ingredientsData as $index => $ingredient) {
+            $ingredientItem = $this->model->newQuery()->find($ingredient['ingredient_id']);
+
+            if (! $ingredientItem
+                || $ingredientItem->item_type !== ItemType::INGREDIENT
+                || $ingredientItem->restaurant_id !== $menuItem->restaurant_id
+            ) {
+                throw ValidationException::withMessages([
+                    "ingredients.{$index}.ingredient_id" => ['Nguyên liệu không hợp lệ hoặc không thuộc nhà hàng này.'],
+                ]);
+            }
+        }
 
         // ── Chuyển đổi format cho Eloquent sync() ────────────────────────────
         // Input:  [['ingredient_id' => 'uuid-1', 'quantity' => 0.200], ...]

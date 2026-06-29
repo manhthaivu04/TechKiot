@@ -76,32 +76,29 @@ class StockDocumentService implements StockDocumentServiceInterface
     }
 
     /**
-     * Xác nhận chứng từ.
-     * Delegate cho State Pattern — chỉ DraftState cho phép confirm().
-     * Sau khi chuyển status → dispatch Event để ghi sổ kho (Observer Pattern).
+     * Xác nhận chứng từ — atomic: status + ghi sổ kho + cập nhật giá vốn.
      *
      * @throws \DomainException khi trạng thái không cho phép
      */
-    public function confirm(string $documentId): void
+    public function confirm(string $documentId, string $restaurantId): void
     {
-        $document = $this->stockDocumentRepository->findByIdOrFail($documentId);
+        DB::transaction(function () use ($documentId, $restaurantId): void {
+            $document = $this->stockDocumentRepository->findByIdAndRestaurantId($documentId, $restaurantId);
 
-        // 1. State Pattern: chuyển draft → confirmed
-        $document->state()->confirm();
+            $document->state()->confirm();
 
-        // 2. Observer Pattern: dispatch event → Listener ghi sổ kho
-        StockDocumentConfirmed::dispatch($document);
+            StockDocumentConfirmed::dispatch($document);
+        });
     }
 
     /**
      * Huỷ chứng từ.
-     * Delegate cho State Pattern — chỉ DraftState cho phép cancel().
      *
      * @throws \DomainException khi trạng thái không cho phép
      */
-    public function cancel(string $documentId): void
+    public function cancel(string $documentId, string $restaurantId): void
     {
-        $document = $this->stockDocumentRepository->findByIdOrFail($documentId);
+        $document = $this->stockDocumentRepository->findByIdAndRestaurantId($documentId, $restaurantId);
         $document->state()->cancel();
     }
 }

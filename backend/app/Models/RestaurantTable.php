@@ -28,7 +28,7 @@ class RestaurantTable extends Model
     {
         return [
             'capacity' => 'integer',
-            'status'   => TableStatus::class,
+            'status' => TableStatus::class,
         ];
     }
 

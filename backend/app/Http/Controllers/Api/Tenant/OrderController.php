@@ -65,8 +65,12 @@ class OrderController extends Controller
 
         $orders = Order::query()
             ->where('restaurant_id', $user->restaurant_id)
+            ->when(request('table_id'), function ($q, $tableId) {
+                $q->where('table_id', $tableId);
+            })
             ->when(request('status'), function ($q, $status) {
-                $q->where('status', $status);
+                $statuses = explode(',', $status);
+                $q->whereIn('status', $statuses);
             })
             ->when(request('service_type'), function ($q, $type) {
                 $q->where('service_type', $type);

@@ -115,6 +115,7 @@ Route::middleware('auth:sanctum')->group(function () {
         // Lý do không dùng apiResource: storePayment và updateStatus là custom routes.
         // POS_QUICK_ORDER là feature tối thiểu để vào module orders.
         Route::middleware('feature:POS_QUICK_ORDER')->group(function () {
+            Route::get('menu', [\App\Http\Controllers\Api\Tenant\MenuController::class, 'index'])->name('menu.index');
             Route::get('orders', [\App\Http\Controllers\Api\Tenant\OrderController::class, 'index'])->name('orders.index');
             Route::post('orders', [\App\Http\Controllers\Api\Tenant\OrderController::class, 'store'])->name('orders.store');
             Route::get('orders/{id}', [\App\Http\Controllers\Api\Tenant\OrderController::class, 'show'])->name('orders.show');

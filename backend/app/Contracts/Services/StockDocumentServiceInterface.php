@@ -19,8 +19,8 @@ interface StockDocumentServiceInterface
     public function store(string $restaurantId, StockDocumentDTO $dto, ?string $userId = null);
 
     /** Xác nhận chứng từ (draft → confirmed) via State Pattern */
-    public function confirm(string $documentId): void;
+    public function confirm(string $documentId, string $restaurantId): void;
 
     /** Huỷ chứng từ (draft → cancelled) via State Pattern */
-    public function cancel(string $documentId): void;
+    public function cancel(string $documentId, string $restaurantId): void;
 }

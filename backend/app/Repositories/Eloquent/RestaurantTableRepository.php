@@ -42,7 +42,7 @@ class RestaurantTableRepository extends BaseEloquentRepository implements Restau
             $search = $filters['search'];
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('uid', 'like', "%{$search}%");
+                    ->orWhere('uid', 'like', "%{$search}%");
             });
         }
 

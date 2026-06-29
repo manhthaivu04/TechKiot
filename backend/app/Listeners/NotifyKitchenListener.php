@@ -20,7 +20,7 @@ class NotifyKitchenListener
 {
     public function handle(OrderPlaced|\App\Events\OrderItemsAdded $event): void
     {
-        $order = $event->order;
+        $order = $event->order->fresh(['items.item', 'restaurant']);
         $restaurant = $order->restaurant;
 
         // 1. LUÔN LUÔN BÁO CHO ĐIỆN THOẠI KHÁCH HÀNG (Dù là gói nào, nguồn nào)
@@ -45,9 +45,9 @@ class NotifyKitchenListener
         Log::info("[KDS] Đơn hàng mới tới bếp.", ['order_code' => $order->order_code]);
 
         if ($event instanceof OrderPlaced) {
-            broadcast(new \App\Events\Broadcasts\KitchenOrderPlacedBroadcast($event->order, $event->dto));
+            broadcast(new \App\Events\Broadcasts\KitchenOrderPlacedBroadcast($order, $event->dto));
         } elseif ($event instanceof \App\Events\OrderItemsAdded) {
-            broadcast(new \App\Events\Broadcasts\KitchenOrderItemsAddedBroadcast($event->order, $event->newItems));
+            broadcast(new \App\Events\Broadcasts\KitchenOrderItemsAddedBroadcast($order, $event->newItems));
         }
     }
 }

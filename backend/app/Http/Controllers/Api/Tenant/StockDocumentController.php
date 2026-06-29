@@ -59,9 +59,9 @@ class StockDocumentController extends Controller
      * PATCH /api/tenant/stock-documents/{id}/confirm
      * Xác nhận chứng từ (draft → confirmed).
      */
-    public function confirm(string $id): JsonResponse
+    public function confirm(string $id, Request $request): JsonResponse
     {
-        $this->stockDocumentService->confirm($id);
+        $this->stockDocumentService->confirm($id, $request->user()->restaurant_id);
 
         return response()->json([
             'message' => 'Xác nhận chứng từ thành công.',
@@ -72,9 +72,9 @@ class StockDocumentController extends Controller
      * PATCH /api/tenant/stock-documents/{id}/cancel
      * Huỷ chứng từ (draft → cancelled).
      */
-    public function cancel(string $id): JsonResponse
+    public function cancel(string $id, Request $request): JsonResponse
     {
-        $this->stockDocumentService->cancel($id);
+        $this->stockDocumentService->cancel($id, $request->user()->restaurant_id);
 
         return response()->json([
             'message' => 'Huỷ chứng từ thành công.',

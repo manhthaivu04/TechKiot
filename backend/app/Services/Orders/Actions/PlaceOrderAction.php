@@ -74,6 +74,6 @@ class PlaceOrderAction
         // Điều này đảm bảo Frontend gọi API (invalidateQueries) sẽ thấy được dữ liệu thật trong DB.
         OrderPlaced::dispatch($order, $dto);
 
-        return $order;
+        return $order->fresh()->load(['items.item', 'payments']);
     }
 }

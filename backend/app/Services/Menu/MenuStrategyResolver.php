@@ -6,6 +6,7 @@ use App\Contracts\Menu\MenuSourceStrategy;
 use App\Enums\MenuSourceType;
 use App\Services\Menu\Strategies\QrStaticMenuStrategy;
 use App\Services\Menu\Strategies\QrTableMenuStrategy;
+use App\Services\Menu\Strategies\TenantPosMenuStrategy;
 
 /**
  * Resolver ánh xạ MenuSourceType → MenuSourceStrategy tương ứng.
@@ -30,8 +31,9 @@ class MenuStrategyResolver
     public function resolve(MenuSourceType $type): MenuSourceStrategy
     {
         return match ($type) {
-            MenuSourceType::QrStatic => app(QrStaticMenuStrategy::class),
-            MenuSourceType::QrTable  => app(QrTableMenuStrategy::class),
+            MenuSourceType::QrStatic  => app(QrStaticMenuStrategy::class),
+            MenuSourceType::QrTable   => app(QrTableMenuStrategy::class),
+            MenuSourceType::TenantPos => app(TenantPosMenuStrategy::class),
         };
     }
 }

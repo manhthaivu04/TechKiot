@@ -30,7 +30,7 @@ use Illuminate\Support\Facades\Log;
  */
 class AdjustInventoryOnOrderChangesListener
 {
-    public function handle(OrderStatusTransitioned|OrderItemRemoved|OrderItemUpdated $event): void
+    public function handle(OrderStatusTransitioned|OrderItemRemoved|OrderItemUpdated|\App\Events\OrderItemsAdded $event): void
     {
         $order = $event->order;
         $restaurant = $order->restaurant ?? $order->restaurant()->first();
@@ -55,7 +55,37 @@ class AdjustInventoryOnOrderChangesListener
             $this->handleOrderItemRemoved($event, $defaultWarehouse);
         } elseif ($event instanceof OrderItemUpdated) {
             $this->handleOrderItemUpdated($event, $defaultWarehouse);
+        } elseif ($event instanceof \App\Events\OrderItemsAdded) {
+            $this->handleOrderItemsAdded($event, $defaultWarehouse);
         }
+    }
+
+    /**
+     * Gọi thêm món -> Trừ nguyên liệu của món gọi thêm.
+     */
+    private function handleOrderItemsAdded(\App\Events\OrderItemsAdded $event, Warehouse $warehouse): void
+    {
+        $order = $event->order;
+
+        DB::transaction(function () use ($warehouse, $order, $event) {
+            foreach ($event->newItems as $dto) {
+                $item = \App\Models\Item::with('ingredients')->find($dto->itemId);
+                if (! $item || $item->ingredients->isEmpty()) {
+                    continue;
+                }
+
+                $this->adjustInventory(
+                    $warehouse, 
+                    $order, 
+                    $item, 
+                    -(float) $dto->quantity, // Truyền số âm để trừ kho
+                    "Trừ kho (Gọi thêm món): [{$item->name}] x{$dto->quantity}"
+                );
+            }
+            Log::info("[INVENTORY] Trừ kho hoàn tất (Gọi thêm món).", [
+                'order_code' => $order->order_code
+            ]);
+        });
     }
 
     /**

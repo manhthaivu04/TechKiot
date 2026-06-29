@@ -19,10 +19,10 @@ namespace App\Enums;
  */
 enum OrderStatus: string
 {
-    case Open      = 'open';
-    case Cooking   = 'cooking';
-    case Served    = 'served';
-    case Paid      = 'paid';
+    case Open = 'open';
+    case Cooking = 'cooking';
+    case Served = 'served';
+    case Paid = 'paid';
     case Cancelled = 'cancelled';
 
 }

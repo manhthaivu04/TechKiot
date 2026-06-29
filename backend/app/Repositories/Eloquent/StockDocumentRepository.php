@@ -51,4 +51,12 @@ class StockDocumentRepository extends BaseEloquentRepository implements StockDoc
 
         return $prefix . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
     }
+
+    public function findByIdAndRestaurantId(string $id, string $restaurantId)
+    {
+        return $this->model
+            ->where('id', $id)
+            ->where('restaurant_id', $restaurantId)
+            ->firstOrFail();
+    }
 }
