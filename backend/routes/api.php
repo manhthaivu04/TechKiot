@@ -23,6 +23,14 @@ use Illuminate\Support\Facades\Route;
 */
 
 // ── Public ─────────────────────────────────────────────────────────────────
+Route::get('/cors-debug', function () {
+    return response()->json([
+        'allowed_origins' => config('cors.allowed_origins'),
+        'env_allowed_origins' => env('ALLOWED_ORIGINS'),
+        'all_config' => config('cors'),
+    ]);
+});
+
 Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login'])->name('auth.login');
 });
