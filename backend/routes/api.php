@@ -24,11 +24,36 @@ use Illuminate\Support\Facades\Route;
 
 // ── Public ─────────────────────────────────────────────────────────────────
 Route::get('/cors-debug', function () {
-    return response()->json([
-        'allowed_origins' => config('cors.allowed_origins'),
-        'env_allowed_origins' => env('ALLOWED_ORIGINS'),
-        'all_config' => config('cors'),
-    ]);
+    try {
+        $item = \App\Models\Item::find('64487659-a97c-4d48-b0be-0ad4ca80a331');
+        $loaded = null;
+        if ($item) {
+            $item->load(['itemGroup', 'ingredients']);
+            $loaded = "Successfully loaded itemGroup and ingredients";
+        } else {
+            $loaded = "Item not found in DB";
+        }
+        return response()->json([
+            'allowed_origins' => config('cors.allowed_origins'),
+            'env_allowed_origins' => env('ALLOWED_ORIGINS'),
+            'all_config' => config('cors'),
+            'item_test' => [
+                'found' => !is_null($item),
+                'data' => $item,
+                'load_status' => $loaded
+            ]
+        ]);
+    } catch (\Throwable $e) {
+        return response()->json([
+            'allowed_origins' => config('cors.allowed_origins'),
+            'env_allowed_origins' => env('ALLOWED_ORIGINS'),
+            'all_config' => config('cors'),
+            'item_test' => [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]
+        ]);
+    }
 });
 
 Route::prefix('auth')->group(function () {
