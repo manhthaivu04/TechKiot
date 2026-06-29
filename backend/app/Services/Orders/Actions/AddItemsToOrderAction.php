@@ -3,8 +3,11 @@
 namespace App\Services\Orders\Actions;
 
 use App\DTOs\AddItemsDTO;
+use App\Enums\OrderSourceChannel;
+use App\Enums\OrderStatus;
 use App\Events\OrderItemsAdded;
 use App\Models\Order;
+use App\Services\Orders\Actions\TransitionOrderAction;
 use App\Services\Orders\Pipes\AddItems\AddItemsCheckInventoryPipe;
 use App\Services\Orders\Pipes\AddItems\AddItemsSavePipe;
 use App\Services\Orders\Pipes\AddItems\AddItemsValidatePipe;
@@ -23,6 +26,7 @@ class AddItemsToOrderAction
 {
     public function __construct(
         private readonly Pipeline $pipeline,
+        private readonly TransitionOrderAction $transitionOrderAction,
     ) {}
 
     private array $pipes = [
@@ -48,6 +52,14 @@ class AddItemsToOrderAction
                 ->thenReturn();
 
             $order = $order->refresh();
+
+            // Đơn cashier còn open → tự gửi xuống bếp (đồng bộ với CashierOrderStrategy)
+            if ($order->status === OrderStatus::Open
+                && $order->source_channel === OrderSourceChannel::Cashier
+            ) {
+                $this->transitionOrderAction->execute($order, OrderStatus::Cooking);
+                $order = $order->refresh();
+            }
 
             // Nếu đơn hàng đã phục vụ (Served), thì khi gọi thêm món phải kéo nó về lại Đang nấu (Cooking)
             // để nhân viên bếp/thu ngân thấy đơn hàng đỏ lên và tiến hành nấu & phục vụ.

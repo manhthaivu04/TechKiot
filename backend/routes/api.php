@@ -42,6 +42,8 @@ Route::prefix('public')->name('public.')->group(function () {
         ->name('orders.show');
     Route::post('orders/{id}/items', [\App\Http\Controllers\Api\Public\PublicOrderController::class, 'addItems'])
         ->name('orders.items.store');
+    Route::get('packages', [\App\Http\Controllers\Api\Public\PublicPackageController::class, 'index'])
+        ->name('packages.index');
 });
 
 
@@ -81,8 +83,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::patch('features/{id}/toggle', [FeatureController::class, 'toggle'])->name('features.toggle');
 
         // Packages (Service packages)
-        Route::apiResource('packages', PackageController::class)
-            ->except(['destroy']);
+        Route::apiResource('packages', PackageController::class);
         Route::patch('packages/{id}/toggle', [PackageController::class, 'toggle'])->name('packages.toggle');
         Route::put('packages/{id}/features', [PackageController::class, 'syncFeatures'])->name('packages.features.sync');
     });
@@ -115,6 +116,7 @@ Route::middleware('auth:sanctum')->group(function () {
         // Lý do không dùng apiResource: storePayment và updateStatus là custom routes.
         // POS_QUICK_ORDER là feature tối thiểu để vào module orders.
         Route::middleware('feature:POS_QUICK_ORDER')->group(function () {
+            Route::get('menu', [\App\Http\Controllers\Api\Tenant\MenuController::class, 'index'])->name('menu.index');
             Route::get('orders', [\App\Http\Controllers\Api\Tenant\OrderController::class, 'index'])->name('orders.index');
             Route::post('orders', [\App\Http\Controllers\Api\Tenant\OrderController::class, 'store'])->name('orders.store');
             Route::get('orders/{id}', [\App\Http\Controllers\Api\Tenant\OrderController::class, 'show'])->name('orders.show');

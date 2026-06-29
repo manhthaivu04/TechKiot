@@ -16,7 +16,7 @@ interface SubscriptionServiceInterface
      * Assign (or upgrade) a package to a restaurant.
      * Creates a new subscription record and activates it immediately.
      */
-    public function assign(string $restaurantId, string $packageId): RestaurantSubscription;
+    public function assign(string $restaurantId, string $packageId, ?string $packagePriceId = null): RestaurantSubscription;
 
     /**
      * Cancel an active subscription.

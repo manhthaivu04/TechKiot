@@ -36,10 +36,17 @@ class OrderStatusTransitioned implements ShouldBroadcastNow
 
     public function broadcastOn(): array
     {
-        return [
+        $channels = [
             new Channel("order.{$this->order->id}"),
-            new Channel("restaurant.{$this->order->restaurant_id}.kitchen")
+            new Channel("restaurant.{$this->order->restaurant_id}.kitchen"),
         ];
+
+        // Chỉ báo cho Cashier khi toàn bộ đơn hàng được đánh dấu là Served
+        if ($this->to === \App\Enums\OrderStatus::Served) {
+            $channels[] = new Channel("restaurant.{$this->order->restaurant_id}.cashier");
+        }
+
+        return $channels;
     }
 
     public function broadcastAs(): string

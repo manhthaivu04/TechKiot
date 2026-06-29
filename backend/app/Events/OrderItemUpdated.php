@@ -26,9 +26,21 @@ class OrderItemUpdated implements ShouldBroadcastNow
         public readonly ?int $oldQuantity = null,
     ) {}
 
-    public function broadcastOn(): Channel
+    public function broadcastOn(): array
     {
-        return new Channel("restaurant.{$this->order->restaurant_id}.kitchen");
+        $channels = [
+            new Channel("restaurant.{$this->order->restaurant_id}.kitchen"),
+        ];
+
+        // Chỉ thông báo cho Cashier khi bếp báo xong (Ready) hoặc đã lên món (Served)
+        if (
+            $this->orderItem->status === \App\Enums\OrderItemStatus::Ready ||
+            $this->orderItem->status === \App\Enums\OrderItemStatus::Served
+        ) {
+            $channels[] = new Channel("restaurant.{$this->order->restaurant_id}.cashier");
+        }
+
+        return $channels;
     }
 
     public function broadcastAs(): string

@@ -4,25 +4,31 @@ namespace App\Services\Orders\Strategies;
 
 use App\Contracts\Orders\OrderSourceStrategy;
 use App\DTOs\PlaceOrderDTO;
+use App\Enums\OrderStatus;
 use App\Models\Order;
+use App\Services\Orders\Actions\TransitionOrderAction;
 use Illuminate\Support\Facades\Log;
 
 /**
  * Strategy cho kênh POS (Cashier) — Feature: POS_QUICK_ORDER.
  *
- * Cashier trực tiếp tạo đơn tại quầy, không cần bước xử lý thêm.
- * Handle() trống là intentional — giữ interface nhất quán và mở rộng dễ dàng.
- * (e.g., sau này có thể in phiếu bếp tự động tại đây.)
+ * Nhân viên/thu ngân tạo đơn → tự động chuyển sang cooking (xuống bếp),
+ * không cần bước xác nhận thủ công như đơn QR từ khách.
  */
 class CashierOrderStrategy implements OrderSourceStrategy
 {
+    public function __construct(
+        private readonly TransitionOrderAction $transitionOrderAction,
+    ) {}
+
     public function handle(Order $order, PlaceOrderDTO $dto): void
     {
-        // Kênh Cashier: nhân viên đã nhìn thấy đơn trực tiếp trên POS.
-        // Không cần push notification hay side-effect nào thêm.
-        Log::info("Order [{$order->order_code}] created via Cashier channel.");
+        if ($order->status !== OrderStatus::Open) {
+            return;
+        }
 
-        // TODO: Tích hợp máy in phiếu bếp tự động (thermal printer) tại đây
-        // $this->printerService->printKitchenTicket($order);
+        $this->transitionOrderAction->execute($order, OrderStatus::Cooking);
+
+        Log::info("Order [{$order->order_code}] auto-sent to kitchen (cashier channel).");
     }
 }

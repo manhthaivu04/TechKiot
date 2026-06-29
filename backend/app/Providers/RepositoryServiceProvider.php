@@ -50,6 +50,7 @@ use App\Repositories\Eloquent\WarehouseRepository;
 use App\Repositories\Eloquent\InventoryRepository;
 use App\Repositories\Eloquent\InventoryTransactionRepository;
 use App\Repositories\Eloquent\StockDocumentRepository;
+use App\Services\ItemCostPriceService;
 use App\Services\ItemGroupService;
 use App\Services\ItemService;
 use App\Services\OrderService;
@@ -68,6 +69,7 @@ use App\Services\Menu\MenuGrouper;
 use App\Services\Menu\MenuService;
 use App\Services\Menu\MenuStrategyResolver;
 use App\Services\Menu\Strategies\QrStaticMenuStrategy;
+use App\Services\Menu\Strategies\TenantPosMenuStrategy;
 // ── Payment Module ──────────────────────────────────────────────────────────
 use App\Contracts\Services\PaymentServiceInterface;
 use App\Services\PaymentService;
@@ -122,6 +124,7 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(WarehouseServiceInterface::class, WarehouseService::class);
         $this->app->bind(InventoryServiceInterface::class, InventoryService::class);
         $this->app->bind(StockDocumentServiceInterface::class, StockDocumentService::class);
+        $this->app->singleton(ItemCostPriceService::class);
 
         // ── Order Action Classes ────────────────────────────────────────────
         // Stateless — an toàn dùng singleton để tái sử dụng qua nhiều requests.
@@ -143,5 +146,6 @@ class RepositoryServiceProvider extends ServiceProvider
 
         // Các Strategy được tạo mới mỗi lần (app() trong Resolver lo việc này)
         $this->app->bind(QrStaticMenuStrategy::class);
+        $this->app->bind(TenantPosMenuStrategy::class);
     }
 }

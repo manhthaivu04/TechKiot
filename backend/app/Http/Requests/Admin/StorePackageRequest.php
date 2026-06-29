@@ -20,8 +20,13 @@ class StorePackageRequest extends FormRequest
             'price'         => ['required', 'numeric', 'min:0'],
             'duration_days' => ['required', 'integer', 'min:1'],
             'is_active'     => ['sometimes', 'boolean'],
-            'feature_ids'   => ['sometimes', 'array'],
-            'feature_ids.*' => ['uuid', 'exists:features,id'],
+            'feature_ids'             => ['sometimes', 'array'],
+            'feature_ids.*'           => ['uuid', 'exists:features,id'],
+            'prices'                  => ['sometimes', 'array'],
+            'prices.*.duration_days'  => ['required', 'integer', 'min:1'],
+            'prices.*.price'          => ['required', 'numeric', 'min:0'],
+            'prices.*.original_price' => ['nullable', 'numeric', 'min:0'],
+            'prices.*.is_active'      => ['sometimes', 'boolean'],
         ];
     }
 }

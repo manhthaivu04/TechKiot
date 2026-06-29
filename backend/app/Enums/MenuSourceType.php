@@ -23,4 +23,7 @@ enum MenuSourceType: string
 
     // Pro: QR động đính kèm table_id
     case QrTable = 'qr_table';
+
+    // Tenant: POS / thu ngân gọi món (authenticated, chỉ MENU_ITEM)
+    case TenantPos = 'tenant_pos';
 }

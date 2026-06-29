@@ -1,0 +1,20 @@
+<?php
+
+namespace App\Strategies\Subscription;
+
+use App\Models\Package;
+use App\Models\PackagePrice;
+use Carbon\Carbon;
+
+class AnnualSubscriptionStrategy implements SubscriptionStrategyInterface
+{
+    public function calculatePrice(Package $package, ?PackagePrice $packagePrice = null): float
+    {
+        return (float) ($packagePrice ? $packagePrice->price : $package->price * 12);
+    }
+
+    public function calculateEndDate(Carbon $startDate, Package $package, ?PackagePrice $packagePrice = null): Carbon
+    {
+        return $startDate->copy()->addYear();
+    }
+}

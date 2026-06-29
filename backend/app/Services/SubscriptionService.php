@@ -8,6 +8,8 @@ use App\Contracts\Repositories\SubscriptionRepositoryInterface;
 use App\Contracts\Services\SubscriptionServiceInterface;
 use App\Enums\SubscriptionStatus;
 use App\Models\RestaurantSubscription;
+use App\Models\PackagePrice;
+use App\Strategies\Subscription\SubscriptionStrategyContext;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
@@ -42,9 +44,9 @@ class SubscriptionService implements SubscriptionServiceInterface
      * Business rules:
      * - The restaurant must exist and not be suspended.
      * - If an active subscription exists, cancel it first (upgrade flow).
-     * - New subscription starts today and runs for package.duration_days.
+     * - New subscription starts today and runs for package.duration_days or packagePrice.duration_days.
      */
-    public function assign(string $restaurantId, string $packageId): RestaurantSubscription
+    public function assign(string $restaurantId, string $packageId, ?string $packagePriceId = null): RestaurantSubscription
     {
         $restaurant = $this->restaurantRepository->findByIdOrFail($restaurantId);
 
@@ -62,6 +64,16 @@ class SubscriptionService implements SubscriptionServiceInterface
             ]);
         }
 
+        $packagePrice = null;
+        if ($packagePriceId) {
+            $packagePrice = PackagePrice::find($packagePriceId);
+            if (! $packagePrice || $packagePrice->package_id !== $package->id) {
+                throw ValidationException::withMessages([
+                    'package_price_id' => 'Invalid package price selected.',
+                ]);
+            }
+        }
+
         // Cancel existing active subscription
         $existing = $this->repository->findActiveByRestaurant($restaurantId);
         if ($existing) {
@@ -72,16 +84,18 @@ class SubscriptionService implements SubscriptionServiceInterface
         }
 
         $startDate = Carbon::today();
-        $endDate   = $startDate->copy()->addDays($package->duration_days);
+        $context   = new SubscriptionStrategyContext($package, $packagePrice);
+        $endDate   = $context->getCalculatedEndDate($startDate, $packagePrice);
 
         /** @var RestaurantSubscription */
         return $this->repository->create([
-            'restaurant_id' => $restaurantId,
-            'package_id'    => $packageId,
-            'start_date'    => $startDate->toDateString(),
-            'end_date'      => $endDate->toDateString(),
-            'status'        => SubscriptionStatus::ACTIVE->value,
-            'activated_at'  => now(),
+            'restaurant_id'    => $restaurantId,
+            'package_id'       => $packageId,
+            'package_price_id' => $packagePriceId,
+            'start_date'       => $startDate->toDateString(),
+            'end_date'         => $endDate->toDateString(),
+            'status'           => SubscriptionStatus::ACTIVE->value,
+            'activated_at'     => now(),
         ]);
     }
 

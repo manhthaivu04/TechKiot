@@ -16,4 +16,7 @@ interface StockDocumentRepositoryInterface extends BaseRepositoryInterface
 
     /** Sinh mã chứng từ tự động theo prefix + số thứ tự (VD: PN001, PX002) */
     public function generateCode(string $restaurantId, string $prefix): string;
+
+    /** Tìm chứng từ theo id và restaurant — chống truy cập chéo tenant */
+    public function findByIdAndRestaurantId(string $id, string $restaurantId);
 }

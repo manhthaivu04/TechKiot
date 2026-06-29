@@ -25,4 +25,6 @@ interface PackageServiceInterface
     public function syncFeatures(string $packageId, array $featureIds): Package;
 
     public function toggle(string $id): Package;
+
+    public function delete(string $id): bool;
 }

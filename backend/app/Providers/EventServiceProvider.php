@@ -4,12 +4,17 @@ namespace App\Providers;
 
 use App\Events\OrderPlaced;
 use App\Events\OrderStatusTransitioned;
+use App\Events\IngredientCostPriceUpdated;
 use App\Events\RecipeUpdated;
 use App\Events\StockDocumentConfirmed;
 use App\Listeners\DeductInventoryListener;
 use App\Listeners\HandleOrderSourceStrategyListener;
+use App\Listeners\LockTableListener;
 use App\Listeners\NotifyKitchenListener;
 use App\Listeners\NotifyKitchenStatusListener;
+use App\Listeners\RecalculateMenuItemsOnIngredientCostChange;
+use App\Listeners\UpdateIngredientCostOnReceiptListener;
+use App\Listeners\UpdateTableStatusListener;
 use App\Listeners\AdjustInventoryOnOrderChangesListener;
 use App\Listeners\ProcessStockMovementListener;
 use App\Listeners\RecalculateItemCostPrice;
@@ -55,17 +60,17 @@ class EventServiceProvider extends ServiceProvider
 
             // ── Khi có đơn hàng mới ──────────────────────────────────────────────
         OrderPlaced::class => [
-            NotifyKitchenListener::class,              // [BASIC]   Báo màn hình KDS
-            HandleOrderSourceStrategyListener::class,  // [BASIC]   Trigger QR/POS Strategy
+            HandleOrderSourceStrategyListener::class,  // [BASIC]   Cashier → auto cooking, QR strategies...
+            NotifyKitchenListener::class,              // [BASIC]   Báo màn hình KDS (sau khi đã chuyển trạng thái)
             DeductInventoryListener::class,            // [PREMIUM] Trừ kho nguyên liệu (guard bên trong)
-
-            // TODO [PRO]:     \App\Listeners\LockTableListener::class,
+            LockTableListener::class,                  // [PRO]     Đánh dấu bàn occupied khi có đơn mới
             // TODO [PREMIUM]: \App\Listeners\SendSmsConfirmationListener::class,
         ],
 
         // ── Khi khách gọi thêm món ──────────────────────────────────────────
         \App\Events\OrderItemsAdded::class => [
             NotifyKitchenListener::class,
+            AdjustInventoryOnOrderChangesListener::class, // [PREMIUM] Trừ kho khi thêm món
         ],
 
         // ── Khi món bị hủy/xóa khỏi đơn ─────────────────────────────────────
@@ -81,14 +86,17 @@ class EventServiceProvider extends ServiceProvider
         // ── Khi trạng thái đơn hàng thay đổi ────────────────────────────────
         OrderStatusTransitioned::class => [
             NotifyKitchenStatusListener::class,        // [BASIC]   Báo KDS chuyển trạng thái
-
-            // TODO [PRO]:     \App\Listeners\UpdateTableStatusListener::class,
+            UpdateTableStatusListener::class,          // [PRO]     Giải phóng bàn khi đơn paid hoặc cancelled
             AdjustInventoryOnOrderChangesListener::class, // [PREMIUM] Điều chỉnh kho khi hủy đơn
         ],
 
         // ── Khi công thức (BOM) được cập nhật ─────────────────────────────────
         RecipeUpdated::class => [
-            RecalculateItemCostPrice::class,             // [PREMIUM] Tính lại cost_price
+            RecalculateItemCostPrice::class,             // [PREMIUM] Tính lại cost_price món ăn
+        ],
+
+        IngredientCostPriceUpdated::class => [
+            RecalculateMenuItemsOnIngredientCostChange::class, // [PREMIUM] Cascade sang món dùng nguyên liệu
         ],
 
         // ── Khi có thanh toán được ghi nhận ──────────────────────────────────
@@ -101,7 +109,8 @@ class EventServiceProvider extends ServiceProvider
 
         // ── Khi chứng từ kho được xác nhận ──────────────────────────────────
         StockDocumentConfirmed::class => [
-            ProcessStockMovementListener::class,        // [PREMIUM] Ghi sổ kho (Strategy Pattern)
+            UpdateIngredientCostOnReceiptListener::class, // [PREMIUM] Bình quân giá vốn nguyên liệu (trước ghi sổ)
+            ProcessStockMovementListener::class,            // [PREMIUM] Ghi sổ kho (Strategy Pattern)
         ],
     ];
 }
