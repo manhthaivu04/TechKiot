@@ -13,7 +13,7 @@ class MonthlySubscriptionStrategy implements SubscriptionStrategyInterface
         return (float) ($packagePrice ? $packagePrice->price : $package->price);
     }
 
-    public function calculateEndDate(Carbon $startDate, ?PackagePrice $packagePrice = null): Carbon
+    public function calculateEndDate(Carbon $startDate, Package $package, ?PackagePrice $packagePrice = null): Carbon
     {
         return $startDate->copy()->addMonth();
     }

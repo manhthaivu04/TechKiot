@@ -10,5 +10,5 @@ interface SubscriptionStrategyInterface
 {
     public function calculatePrice(Package $package, ?PackagePrice $packagePrice = null): float;
 
-    public function calculateEndDate(Carbon $startDate, ?PackagePrice $packagePrice = null): Carbon;
+    public function calculateEndDate(Carbon $startDate, Package $package, ?PackagePrice $packagePrice = null): Carbon;
 }

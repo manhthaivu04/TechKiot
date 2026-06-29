@@ -9,9 +9,11 @@ use Carbon\Carbon;
 class SubscriptionStrategyContext
 {
     private SubscriptionStrategyInterface $strategy;
+    private Package $package;
 
     public function __construct(Package $package, ?PackagePrice $packagePrice = null)
     {
+        $this->package = $package;
         if (! $packagePrice) {
             $this->strategy = new LegacySubscriptionStrategy();
         } elseif ($packagePrice->duration_days == 30) {
@@ -32,6 +34,6 @@ class SubscriptionStrategyContext
 
     public function getCalculatedEndDate(Carbon $startDate, ?PackagePrice $packagePrice = null): Carbon
     {
-        return $this->strategy->calculateEndDate($startDate, $packagePrice);
+        return $this->strategy->calculateEndDate($startDate, $this->package, $packagePrice);
     }
 }

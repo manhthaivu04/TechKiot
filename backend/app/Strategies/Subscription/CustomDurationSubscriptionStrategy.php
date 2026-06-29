@@ -13,7 +13,7 @@ class CustomDurationSubscriptionStrategy implements SubscriptionStrategyInterfac
         return (float) ($packagePrice ? $packagePrice->price : $package->price);
     }
 
-    public function calculateEndDate(Carbon $startDate, ?PackagePrice $packagePrice = null): Carbon
+    public function calculateEndDate(Carbon $startDate, Package $package, ?PackagePrice $packagePrice = null): Carbon
     {
         $durationDays = $packagePrice ? $packagePrice->duration_days : $package->duration_days;
         return $startDate->copy()->addDays($durationDays);

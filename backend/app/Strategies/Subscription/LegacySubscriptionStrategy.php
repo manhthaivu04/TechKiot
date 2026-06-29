@@ -13,7 +13,7 @@ class LegacySubscriptionStrategy implements SubscriptionStrategyInterface
         return (float) $package->price;
     }
 
-    public function calculateEndDate(Carbon $startDate, ?PackagePrice $packagePrice = null): Carbon
+    public function calculateEndDate(Carbon $startDate, Package $package, ?PackagePrice $packagePrice = null): Carbon
     {
         return $startDate->copy()->addDays($package->duration_days);
     }

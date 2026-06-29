@@ -13,7 +13,7 @@ class AnnualSubscriptionStrategy implements SubscriptionStrategyInterface
         return (float) ($packagePrice ? $packagePrice->price : $package->price * 12);
     }
 
-    public function calculateEndDate(Carbon $startDate, ?PackagePrice $packagePrice = null): Carbon
+    public function calculateEndDate(Carbon $startDate, Package $package, ?PackagePrice $packagePrice = null): Carbon
     {
         return $startDate->copy()->addYear();
     }
