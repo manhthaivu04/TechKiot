@@ -1,22 +1,30 @@
-# Stage 1: Build composer dependencies
-FROM php:8.2-fpm-alpine as builder
+FROM php:8.2-fpm-alpine
 
 WORKDIR /var/www/html
 
-# Install system dependencies for composer and php extensions
+# Install system dependencies & development libraries
 RUN apk add --no-cache \
     bash \
     curl \
+    libpng \
     libpng-dev \
+    libxml2 \
     libxml2-dev \
     zip \
     unzip \
     git \
+    oniguruma \
     oniguruma-dev \
-    libzip-dev
+    libzip \
+    libzip-dev \
+    nginx \
+    supervisor
 
 # Install PHP extensions
 RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
+
+# Clean up dev packages to keep the image size small
+RUN apk del libpng-dev libxml2-dev oniguruma-dev libzip-dev
 
 # Get latest Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -24,22 +32,8 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Copy application files
 COPY . .
 
-# Install dependencies (exclude dev tools)
+# Install PHP dependencies (exclude dev tools)
 RUN composer install --no-interaction --optimize-autoloader --no-dev
-
-# Stage 2: Production image
-FROM php:8.2-fpm-alpine
-
-WORKDIR /var/www/html
-
-# Install Nginx, supervisor, and runtime dependencies
-RUN apk add --no-cache nginx supervisor curl libpng libzip mariadb-connector-c-dev libxml2 oniguruma
-
-# Install PHP extensions needed at runtime
-RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
-
-# Copy code from builder stage
-COPY --from=builder /var/www/html /var/www/html
 
 # Copy configuration files
 COPY docker/nginx.conf /etc/nginx/nginx.conf
@@ -57,3 +51,4 @@ EXPOSE 80
 
 # Start Supervisor (which starts both Nginx and PHP-FPM)
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+
