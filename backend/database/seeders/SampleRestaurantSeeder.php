@@ -19,17 +19,19 @@ class SampleRestaurantSeeder extends Seeder
     public function run(): void
     {
         // 1. Tạo nhà hàng
-        $restaurant = Restaurant::create([
-            'id' => Str::uuid()->toString(),
-            'name' => 'Nhà hàng KiotTay của Nam',
-            'phone' => '0987654321',
-            'address' => 'Hà Nội, Việt Nam',
-            'status' => 'active',
-        ]);
+        $restaurant = Restaurant::firstOrCreate(
+            ['name' => 'Nhà hàng KiotTay của Nam'],
+            [
+                'id' => Str::uuid()->toString(),
+                'phone' => '0987654321',
+                'address' => 'Hà Nội, Việt Nam',
+                'status' => 'active',
+            ]
+        );
 
         // 2. Tạo gói Subscription (BASIC)
         $basicPackage = \App\Models\Package::where('code', 'BASIC')->first();
-        if ($basicPackage) {
+        if ($basicPackage && !$restaurant->subscriptions()->exists()) {
             $restaurant->subscriptions()->create([
                 'package_id' => $basicPackage->id,
                 'status' => 'active',
@@ -40,28 +42,28 @@ class SampleRestaurantSeeder extends Seeder
         }
 
         // 3. Tạo tài khoản Chủ nhà hàng (Owner)
-        User::create([
-            'id' => Str::uuid()->toString(),
-            'restaurant_id' => $restaurant->id,
-            'name' => 'Nam Owner',
-            'email' => 'nam@gmail.com',
-            'password' => Hash::make('12345678'),
-            'role' => 'OWNER',
-            'is_active' => true,
-        ]);
+        User::firstOrCreate(
+            ['email' => 'nam@gmail.com'],
+            [
+                'id' => Str::uuid()->toString(),
+                'restaurant_id' => $restaurant->id,
+                'name' => 'Nam Owner',
+                'password' => Hash::make('12345678'),
+                'role' => 'OWNER',
+                'is_active' => true,
+            ]
+        );
 
         // 4. Tạo các Nhóm món ăn
-        $groupMain = ItemGroup::create([
-            'id' => Str::uuid()->toString(),
-            'restaurant_id' => $restaurant->id,
-            'name' => 'Món Chính',
-        ]);
+        $groupMain = ItemGroup::firstOrCreate(
+            ['restaurant_id' => $restaurant->id, 'name' => 'Món Chính'],
+            ['id' => Str::uuid()->toString()]
+        );
 
-        $groupDrink = ItemGroup::create([
-            'id' => Str::uuid()->toString(),
-            'restaurant_id' => $restaurant->id,
-            'name' => 'Đồ Uống',
-        ]);
+        $groupDrink = ItemGroup::firstOrCreate(
+            ['restaurant_id' => $restaurant->id, 'name' => 'Đồ Uống'],
+            ['id' => Str::uuid()->toString()]
+        );
 
         // 5. Tạo các Món ăn
         $items = [
@@ -100,13 +102,20 @@ class SampleRestaurantSeeder extends Seeder
         ];
 
         foreach ($items as $itemData) {
-            Item::create(array_merge($itemData, [
-                'id' => Str::uuid()->toString(),
-                'restaurant_id' => $restaurant->id,
-                'item_type' => 'MENU_ITEM',
-                'is_active' => true,
-                'availability_status' => 'IN_STOCK',
-            ]));
+            Item::firstOrCreate(
+                ['restaurant_id' => $restaurant->id, 'name' => $itemData['name']],
+                [
+                    'id' => Str::uuid()->toString(),
+                    'item_group_id' => $itemData['item_group_id'],
+                    'description' => $itemData['description'],
+                    'cost_price' => $itemData['cost_price'],
+                    'sale_price' => $itemData['sale_price'],
+                    'image_url' => $itemData['image_url'],
+                    'item_type' => 'MENU_ITEM',
+                    'is_active' => true,
+                    'availability_status' => 'IN_STOCK',
+                ]
+            );
         }
     }
 }

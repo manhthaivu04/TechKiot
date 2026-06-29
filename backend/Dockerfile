@@ -38,6 +38,11 @@ RUN composer install --no-interaction --optimize-autoloader --no-dev
 # Copy configuration files
 COPY docker/nginx.conf /etc/nginx/nginx.conf
 COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+
+# Clean Windows line endings (CRLF) and make it executable
+RUN sed -i 's/\r$//' /usr/local/bin/entrypoint.sh \
+    && chmod +x /usr/local/bin/entrypoint.sh
 
 # Setup logs and configurations
 RUN mkdir -p /var/log/nginx /var/log/supervisor
@@ -49,6 +54,7 @@ RUN chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache \
 # Expose port 80 for Nginx
 EXPOSE 80
 
-# Start Supervisor (which starts both Nginx and PHP-FPM)
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+# Start via entrypoint script
+CMD ["/usr/local/bin/entrypoint.sh"]
+
 
