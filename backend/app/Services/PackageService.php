@@ -51,7 +51,13 @@ class PackageService implements PackageServiceInterface
             $this->repository->syncFeatures($package, $data['feature_ids']);
         }
 
-        return $package->load('features');
+        if (! empty($data['prices'])) {
+            foreach ($data['prices'] as $priceData) {
+                $package->prices()->create($priceData);
+            }
+        }
+
+        return $package->load(['features', 'prices']);
     }
 
     public function update(string $id, array $data): Package
@@ -76,7 +82,22 @@ class PackageService implements PackageServiceInterface
             $this->repository->syncFeatures($package, $data['feature_ids']);
         }
 
-        return $package->load('features');
+        if (array_key_exists('prices', $data)) {
+            $existingIds = [];
+            foreach ($data['prices'] as $priceData) {
+                if (! empty($priceData['id'])) {
+                    $package->prices()->where('id', $priceData['id'])->update($priceData);
+                    $existingIds[] = $priceData['id'];
+                } else {
+                    $newPrice = $package->prices()->create($priceData);
+                    $existingIds[] = $newPrice->id;
+                }
+            }
+            // Delete prices that are not in the new list
+            $package->prices()->whereNotIn('id', $existingIds)->delete();
+        }
+
+        return $package->load(['features', 'prices']);
     }
 
     public function syncFeatures(string $packageId, array $featureIds): Package
@@ -98,5 +119,21 @@ class PackageService implements PackageServiceInterface
         return $this->repository->update($package, [
             'is_active' => ! $package->is_active,
         ]);
+    }
+
+    public function delete(string $id): bool
+    {
+        $package = $this->findOrFail($id);
+
+        // Kiểm tra ràng buộc dữ liệu: Không cho phép xóa gói dịch vụ đang được nhà hàng sử dụng
+        if (\App\Models\RestaurantSubscription::where('package_id', $id)->exists()) {
+            throw ValidationException::withMessages([
+                'package' => 'Không thể xóa gói dịch vụ này vì đang có nhà hàng đăng ký sử dụng.',
+            ]);
+        }
+
+        $package->prices()->delete();
+
+        return $this->repository->delete($package);
     }
 }

@@ -37,11 +37,15 @@ class SubscriptionController extends Controller
     /** POST /api/admin/restaurants/{restaurantId}/subscriptions */
     public function assign(AssignSubscriptionRequest $request, string $restaurantId): JsonResponse
     {
-        $subscription = $this->service->assign($restaurantId, $request->validated('package_id'));
+        $subscription = $this->service->assign(
+            $restaurantId,
+            $request->validated('package_id'),
+            $request->validated('package_price_id')
+        );
 
         return response()->json([
             'message'      => 'Package assigned successfully.',
-            'subscription' => new SubscriptionResource($subscription->load('package')),
+            'subscription' => new SubscriptionResource($subscription->load(['package', 'packagePrice'])),
         ], 201);
     }
 

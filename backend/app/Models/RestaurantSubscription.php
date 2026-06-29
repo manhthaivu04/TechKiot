@@ -15,6 +15,7 @@ class RestaurantSubscription extends Model
     protected $fillable = [
         'restaurant_id',
         'package_id',
+        'package_price_id',
         'start_date',
         'end_date',
         'status',
@@ -43,6 +44,11 @@ class RestaurantSubscription extends Model
     public function package(): BelongsTo
     {
         return $this->belongsTo(Package::class);
+    }
+
+    public function packagePrice(): BelongsTo
+    {
+        return $this->belongsTo(PackagePrice::class);
     }
 
     // ─── Helpers ─────────────────────────────────────────────────────────────

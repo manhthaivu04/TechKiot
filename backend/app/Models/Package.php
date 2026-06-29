@@ -43,4 +43,9 @@ class Package extends Model
     {
         return $this->hasMany(RestaurantSubscription::class);
     }
+
+    public function prices(): HasMany
+    {
+        return $this->hasMany(PackagePrice::class);
+    }
 }

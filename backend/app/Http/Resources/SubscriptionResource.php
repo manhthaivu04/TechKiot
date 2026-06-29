@@ -14,6 +14,7 @@ class SubscriptionResource extends JsonResource
             'id'            => $this->id,
             'restaurant_id' => $this->restaurant_id,
             'package'       => new PackageResource($this->whenLoaded('package')),
+            'package_price' => new PackagePriceResource($this->whenLoaded('packagePrice')),
             'start_date'    => $this->start_date?->toDateString(),
             'end_date'      => $this->end_date?->toDateString(),
             'status'        => $this->status->value,

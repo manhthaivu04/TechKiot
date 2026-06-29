@@ -20,8 +20,8 @@ class PackageRepository extends BaseEloquentRepository implements PackageReposit
     public function paginate(array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
         return $this->model->newQuery()
-            ->with('features')
-            ->when(isset($filters['is_active']), fn ($q) => $q->where('is_active', $filters['is_active']))
+            ->with(['features', 'prices'])
+            ->when(isset($filters['is_active']), fn ($q) => $q->where('is_active', filter_var($filters['is_active'], FILTER_VALIDATE_BOOLEAN)))
             ->when(
                 isset($filters['search']),
                 fn ($q) => $q->where(function ($q) use ($filters) {
@@ -36,7 +36,7 @@ class PackageRepository extends BaseEloquentRepository implements PackageReposit
     public function findByCode(string $code): ?Package
     {
         return $this->model->newQuery()
-            ->with('features')
+            ->with(['features', 'prices'])
             ->where('code', $code)
             ->first();
     }
@@ -44,7 +44,7 @@ class PackageRepository extends BaseEloquentRepository implements PackageReposit
     public function allActiveWithFeatures(): Collection
     {
         return $this->model->newQuery()
-            ->with('features')
+            ->with(['features', 'prices'])
             ->where('is_active', true)
             ->orderBy('price')
             ->get();

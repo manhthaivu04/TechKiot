@@ -42,7 +42,7 @@ class PackageController extends Controller
     {
         $package = $this->service->findOrFail($id);
 
-        return response()->json(new PackageResource($package->load('features')));
+        return response()->json(new PackageResource($package->load(['features', 'prices'])));
     }
 
     /** PUT /api/admin/packages/{id} */
@@ -60,7 +60,7 @@ class PackageController extends Controller
 
         return response()->json([
             'message' => 'Package status toggled.',
-            'package' => new PackageResource($package),
+            'package' => new PackageResource($package->load(['features', 'prices'])),
         ]);
     }
 
@@ -71,7 +71,15 @@ class PackageController extends Controller
 
         return response()->json([
             'message' => 'Features synced successfully.',
-            'package' => new PackageResource($package),
+            'package' => new PackageResource($package->load(['features', 'prices'])),
         ]);
+    }
+
+    /** DELETE /api/admin/packages/{id} */
+    public function destroy(string $id): JsonResponse
+    {
+        $this->service->delete($id);
+
+        return response()->json(['message' => 'Package deleted successfully.'], 204);
     }
 }
