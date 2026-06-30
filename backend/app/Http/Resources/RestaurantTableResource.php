@@ -23,6 +23,7 @@ class RestaurantTableResource extends JsonResource
             'status' => $this->status->value,
             'status_label' => $this->status->label(),
             'qr_token' => $this->qr_token,
+            'qr_code_url' => $this->qr_code_url,
             'created_at' => $this->created_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),
         ];

@@ -22,6 +22,7 @@ class RestaurantTable extends Model
         'capacity',
         'status',
         'qr_token',
+        'qr_code_url',
     ];
 
     protected function casts(): array

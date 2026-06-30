@@ -162,6 +162,12 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('orders/{id}/payments', [\App\Http\Controllers\Api\Tenant\PaymentController::class, 'index'])->name('orders.payments.index');
         });
 
+        // ── QR Menu (Basic: QR_STATIC_ORDER) ──────────────────────────────────
+        Route::middleware(['feature:QR_STATIC_ORDER'])->group(function () {
+            Route::get('restaurant/qr-code', [\App\Http\Controllers\Api\Tenant\QrController::class, 'staticQrCode'])
+                ->name('restaurant.qr-code');
+        });
+
         // Pro Features
         // Payment Method Settings (GET cho tất cả nhân viên để hiện phương thức lúc thanh toán)
         Route::get('payment-method-settings', [\App\Http\Controllers\Api\Tenant\PaymentMethodSettingController::class, 'index'])
@@ -195,6 +201,8 @@ Route::middleware('auth:sanctum')->group(function () {
             
             Route::get('restaurant-tables', [\App\Http\Controllers\Api\Tenant\RestaurantTableController::class, 'index']);
             Route::get('restaurant-tables/{id}', [\App\Http\Controllers\Api\Tenant\RestaurantTableController::class, 'show']);
+            Route::get('restaurant-tables/{id}/qr-code', [\App\Http\Controllers\Api\Tenant\QrController::class, 'tableQrCode'])
+                ->name('restaurant-tables.qr-code');
 
             // 2. Nhóm THAO TÁC tạo/sửa/xóa (Chỉ dành cho Chủ quán và Quản lý)
             Route::middleware('role:OWNER,MANAGER')->group(function () {

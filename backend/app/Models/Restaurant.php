@@ -19,6 +19,7 @@ class Restaurant extends Model
         'address',
         'phone',
         'public_order_token',
+        'qr_code_url',
         'status',
     ];
 

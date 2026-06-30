@@ -123,4 +123,16 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Frontend URL
+    |--------------------------------------------------------------------------
+    |
+    | The URL of the frontend application used to generate QR Codes pointing
+    | to the customer-facing menu and ordering page.
+    |
+    */
+    'frontend_url' => env('FRONTEND_URL', 'https://kiot-tay-frontend.vercel.app'),
+
 ];
+
